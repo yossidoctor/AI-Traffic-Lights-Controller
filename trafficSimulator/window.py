@@ -36,6 +36,12 @@ class Window:
         pygame.font.init()
         self.text_font = pygame.font.SysFont('Lucida Console', 16)
 
+        # # Play background music
+        # pygame.mixer.init()
+        # pygame.mixer.music.load("Slow_Ride.mp3")
+        # pygame.mixer.music.set_volume(0.5)
+        # pygame.mixer.music.play(start=0, fade_ms=6500)
+
     def run(self):
         """ Creates a window and runs the simulation """
 
