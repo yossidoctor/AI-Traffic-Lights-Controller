@@ -1,5 +1,5 @@
 from trafficSimulator import Window
-from two_way_intersection import two_way_intersection
+from trafficSimulator.two_way_intersection import two_way_intersection
 
 # for debugging purposes, remove after completion
 RESET_UPON_COLLISION = False  # False for debugging, True by default
