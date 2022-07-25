@@ -1,8 +1,11 @@
 import numpy as np
 
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+
 
 class Vehicle:
-    def __init__(self, generation_time, path, position):
+    def __init__(self, generation_time, path, position, ems):
         """
         :param generation_time: simulation time at which the vehicle was generated
         :param path: a list of road indexes
@@ -13,11 +16,13 @@ class Vehicle:
         self.current_road_index = 0
         self.generation_time = generation_time
         self.total_standing_time = 0
+        self.ems = ems
+        self.ems_color = RED
         self._is_stopped = False
         self._last_time_stopped = 0
 
         # for debugging purposes, remove after completion
-        self.color = (0, 0, 255)
+        self.color = (0, 0, 0) if ems else (0, 0, 255)
         self.crashed = False
 
         self.length = 4
@@ -31,6 +36,12 @@ class Vehicle:
         self.x = 0
         self.v = self.v_max
         self.a = 0
+
+    def change_ems_color(self):
+        if self.ems_color == RED:
+            self.ems_color = BLUE
+        else:
+            self.ems_color = RED
 
     def update(self, lead, dt):
         """

@@ -4,10 +4,11 @@ from .vehicle import Vehicle
 
 
 class VehicleGenerator:
-    def __init__(self, sim, vehicle_rate, paths):
+    def __init__(self, sim, vehicle_rate, paths, ems):
         self._sim = sim
         self._vehicle_rate = vehicle_rate
         self._paths = paths
+        self.ems = ems
 
         self._last_added_time = 0
         self._upcoming_vehicle = self._generate_vehicle()
@@ -20,7 +21,7 @@ class VehicleGenerator:
             r -= weight
             if r <= 0:
                 first_road = self._sim.roads[path[0]]
-                return Vehicle(self._sim.t, path, first_road.start)
+                return Vehicle(self._sim.t, path, first_road.start, self.ems)
 
     def update(self):
         """Adds a vehicle"""

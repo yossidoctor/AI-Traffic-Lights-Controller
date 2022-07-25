@@ -9,6 +9,7 @@ class Simulation:
     def __init__(self):
         self.t = 0.0  # Time keeping
         self.dt = 1 / 60  # Simulation time step
+        self.frame_count = 0  # Frame time keeping
         self.roads = []
         self.vehicle_generators = []
         self.traffic_signals = []
@@ -36,8 +37,8 @@ class Simulation:
             road = Road(start, end)
             self.roads.append(road)
 
-    def create_gen(self, vehicle_rate, paths):
-        gen = VehicleGenerator(self, vehicle_rate, paths)
+    def create_gen(self, vehicle_rate, paths, ems=False):
+        gen = VehicleGenerator(self, vehicle_rate, paths, ems)
         self.vehicle_generators.append(gen)
 
     def create_signal(self, roads, cycle, slow_distance, slow_factor, stop_distance):
@@ -98,3 +99,4 @@ class Simulation:
 
         # Increment time
         self.t += self.dt
+        self.frame_count += 1

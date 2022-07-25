@@ -281,6 +281,12 @@ class Window:
 
         self.draw_polygon((x, y), (l, h), cos=cos, sin=sin, centered=True, color=vehicle.color)
 
+        if vehicle.ems and not vehicle.crashed:
+            if self.sim.frame_count % 15 == 0:
+                vehicle.change_ems_color()
+            self.draw_polygon((x, y), (l / 8, h * 0.75), cos=cos, sin=sin, centered=False, color=vehicle.ems_color)
+            self.sim.frame_count += 1
+
     def draw_vehicles(self):
         for road in self.sim.roads:
             for vehicle in road.vehicles:

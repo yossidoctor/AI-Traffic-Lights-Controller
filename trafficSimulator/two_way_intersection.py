@@ -95,6 +95,7 @@ def turn(t): return range(t, t + n)
 
 # Vehicle generator
 VEHICLE_RATE = 30
+EMS_VEHICLE_RATE = 4
 PATHS = [
     [3, [0, 8, 6]],
     [1, [0, *turn(12), 5]],
@@ -112,9 +113,6 @@ PATHS = [
     [1, [3, *turn(12 + 6 * n), 4]],
     [1, [3, *turn(12 + 7 * n), 6]]
 ]
-
-
-# for path in PATHS:
 
 
 def short_turn(t): return range(t + 2, t + n - 2)
@@ -163,6 +161,7 @@ def two_way_intersection():
     sim = Simulation()
     sim.create_roads(ROADS)
     sim.create_gen(VEHICLE_RATE, PATHS)
+    sim.create_gen(EMS_VEHICLE_RATE, PATHS, ems=True)
     sim.create_signal(SIGNALS, CYCLE, SLOW_DISTANCE, SLOW_FACTOR, STOP_DISTANCE)
     sim.create_intersections(INTERSECTIONS_DICT)
     return sim
