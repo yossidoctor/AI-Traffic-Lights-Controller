@@ -26,8 +26,9 @@ class VehicleGenerator:
     def update(self):
         """Adds a vehicle"""
         vehicle_generated = False
-        if self._sim.t - self._last_added_time >= 60 / self._vehicle_rate:
-            # If time elapsed after last generation is greater than vehicle period, generate a vehicle
+        # If time elapsed after last generation is greater than vehicle period,
+        # or there's no vehicles on the map generate a vehicle
+        if not self._sim.vehicles_generated or self._sim.t - self._last_added_time >= 60 / self._vehicle_rate:
             road = self._sim.roads[self._upcoming_vehicle.path[0]]
             if len(road.vehicles) == 0 or \
                     road.vehicles[-1].x > self._upcoming_vehicle.s0 + self._upcoming_vehicle.length:

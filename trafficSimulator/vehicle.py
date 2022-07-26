@@ -1,7 +1,7 @@
 import numpy as np
 
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
+RED = (255, 51, 51)
+BLUE = (51, 51, 255)
 
 
 class Vehicle:
