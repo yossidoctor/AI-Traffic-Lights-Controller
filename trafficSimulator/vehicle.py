@@ -22,6 +22,7 @@ class Vehicle:
         self._last_time_stopped = 0
 
         # for debugging purposes, remove after completion
+        self.id = None
         self.color = (0, 0, 0) if ems else (0, 0, 255)
         self.crashed = False
 

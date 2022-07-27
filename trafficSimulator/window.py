@@ -1,14 +1,18 @@
 import numpy as np
 import pygame
-from pygame import draw, QUIT, MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP, KEYDOWN
+from pygame import draw
 
 # for debugging purposes, remove after completion
 DRAW_ROAD_IDS = False  # True for debugging, False by default
+DRAW_VEHICLE_IDS = False  # True for debugging, False by default
 FILL_POLYGONS = True  # False for debugging, True by default
 DRAW_GRID = False  # True for debugging, False by default
-ZOOM_IN_UPON_COLLISION = False  # True for debugging, False by default
 
-EVENTS = {QUIT, MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP, KEYDOWN}
+EVENTS = {pygame.QUIT,
+          pygame.MOUSEBUTTONDOWN,
+          pygame.MOUSEMOTION,
+          pygame.MOUSEBUTTONUP,
+          pygame.KEYDOWN}
 
 
 class Window:
@@ -39,8 +43,8 @@ class Window:
         # # Play background music
         # pygame.mixer.init()
         # pygame.mixer.music.load("Slow_Ride.mp3")
-        # pygame.mixer.music.set_volume(0.5)
-        # pygame.mixer.music.play(start=0, fade_ms=6500)
+        # pygame.mixer.music.set_volume(0.3)
+        # pygame.mixer.music.play(start=0, fade_ms=8000)
 
     def run(self):
         """ Creates a window and runs the simulation """
@@ -53,7 +57,7 @@ class Window:
             if self.sim.vehicles_on_map > 1:
                 detected = self.sim.detect_collisions()
                 if detected:
-                    print(f"COLLISION")
+                    # print(f"COLLISION")
                     return
 
             # Draw simulation
@@ -247,16 +251,26 @@ class Window:
 
         vehicle.position = x, y
 
-        self.draw_polygon((x, y), (l, h), cos=cos, sin=sin, centered=True, color=vehicle.color)
+        screen_x, screen_y = self.draw_polygon((x, y), (l, h), cos=cos, sin=sin, centered=True, color=vehicle.color)
+
+        # for debugging purposes, remove after completion
+        if DRAW_VEHICLE_IDS:
+            text_road_index = self.text_font.render(f'{vehicle.id}', True, (255, 255, 255), (0, 0, 0))
+            self.screen.blit(text_road_index, (screen_x, screen_y))
+            if vehicle.id == 1:
+                print(vehicle.v_max, vehicle.v, vehicle.position, vehicle.a, vehicle.a_max)
 
         if vehicle.ems and not vehicle.crashed:
+            # time = render(f'Time: {pygame.time.get_ticks() / 1000:.0f}s')
             if self.sim.t - self.last_ems_update_time >= 1:
+                # print(self.last_ems_update_time, pygame.time.get_ticks())
                 vehicle.change_ems_color()
                 self.last_ems_update_time = self.sim.t
             self.draw_polygon((x, y), (l / 8, h * 0.75), cos=cos, sin=sin, centered=False, color=vehicle.ems_color)
             self.sim.frame_count += 1
 
     def draw_vehicles(self):
+        # vehicles = self.sim.get_vehicles()
         for vehicle in self.sim.get_vehicles():
             self.draw_vehicle(vehicle)
 

@@ -109,7 +109,7 @@ class Simulation:
 
         # Add vehicles
         for gen in self.vehicle_generators:
-            self.vehicles_generated += gen.update()
+            self.vehicles_generated += gen.update(id=self.vehicles_generated)
 
         for signal in self.traffic_signals:
             signal.update(self)
