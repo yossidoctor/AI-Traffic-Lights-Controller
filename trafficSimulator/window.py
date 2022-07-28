@@ -247,12 +247,10 @@ class Window:
 
         # for debugging purposes, remove after completion
         if DRAW_VEHICLE_IDS:
-            text_road_index = self.text_font.render(f'{vehicle.id}', True, (255, 255, 255), (0, 0, 0))
+            text_road_index = self.text_font.render(f'{vehicle.index}', True, (255, 255, 255), (0, 0, 0))
             self.screen.blit(text_road_index, (screen_x, screen_y))
-            if vehicle.id == 1:
-                print(vehicle.v_max, vehicle.v, vehicle.position, vehicle.a, vehicle.a_max)
 
-        if vehicle.ems and not vehicle.crashed:
+        if vehicle.is_ems and not vehicle.crashed:
             # time = render(f'Time: {pygame.time.get_ticks() / 1000:.0f}s')
             if self.sim.t - self.last_ems_update_time >= 1:
                 # print(self.last_ems_update_time, pygame.time.get_ticks())
