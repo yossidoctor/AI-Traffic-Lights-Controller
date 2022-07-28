@@ -16,7 +16,7 @@ class Vehicle:
         self.current_road_index = 0
         self.generation_time = generation_time
         self.total_standing_time = 0
-        self.ems = ems
+        self.is_ems = ems
         self.ems_color = RED
         self._is_stopped = False
         self._last_time_stopped = 0
