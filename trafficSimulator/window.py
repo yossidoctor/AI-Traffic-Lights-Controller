@@ -3,10 +3,10 @@ import pygame
 from pygame import draw
 
 # for debugging purposes, remove after completion
-DRAW_ROAD_IDS = False  # True for debugging, False by default
-DRAW_VEHICLE_IDS = False  # True for debugging, False by default
-FILL_POLYGONS = True  # False for debugging, True by default
-DRAW_GRID = False  # True for debugging, False by default
+DRAW_ROAD_IDS = True  # True for debugging, False by default
+DRAW_VEHICLE_IDS = True  # True for debugging, False by default
+FILL_POLYGONS = False  # False for debugging, True by default
+DRAW_GRID = True  # True for debugging, False by default
 
 EVENTS = {pygame.QUIT,
           pygame.MOUSEBUTTONDOWN,
@@ -257,8 +257,8 @@ class Window:
         if DRAW_VEHICLE_IDS:
             text_road_index = self.text_font.render(f'{vehicle.id}', True, (255, 255, 255), (0, 0, 0))
             self.screen.blit(text_road_index, (screen_x, screen_y))
-            if vehicle.id == 1:
-                print(vehicle.v_max, vehicle.v, vehicle.position, vehicle.a, vehicle.a_max)
+            # if vehicle.id == 1:
+            #     print(vehicle.v_max, vehicle.v, vehicle.position, vehicle.a, vehicle.a_max)
 
         if vehicle.ems and not vehicle.crashed:
             # time = render(f'Time: {pygame.time.get_ticks() / 1000:.0f}s')
