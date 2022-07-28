@@ -7,6 +7,7 @@ a = 2  # Short offset from (0, 0)
 b = 12  # Long offset from (0, 0)
 length = 50  # Road length
 
+
 # Nodes
 WEST_RIGHT_START = (-b - length, a)
 WEST_LEFT_START = (-b - length, -a)
