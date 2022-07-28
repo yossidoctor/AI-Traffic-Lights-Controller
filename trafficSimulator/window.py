@@ -7,6 +7,7 @@ DRAW_ROAD_IDS = False  # True for debugging, False by default
 DRAW_VEHICLE_IDS = False  # True for debugging, False by default
 FILL_POLYGONS = True  # False for debugging, True by default
 DRAW_GRID = False  # True for debugging, False by default
+ZOOM_ON_COLLISION = False  # True for debugging, False by default
 
 EVENTS = {pygame.QUIT,
           pygame.MOUSEBUTTONDOWN,
@@ -57,6 +58,9 @@ class Window:
             if self.sim.vehicles_on_map > 1:
                 detected = self.sim.detect_collisions()
                 if detected:
+                    if ZOOM_ON_COLLISION:
+                        self.zoom = 28
+                        self.sim.dt = 0.0001
                     # print(f"COLLISION")
                     return
 
@@ -189,14 +193,8 @@ class Window:
     def draw_axes(self, color=(100, 100, 100)):
         x_start, y_start = self.inverse_convert(0, 0)
         x_end, y_end = self.inverse_convert(self.width, self.height)
-        draw.line(self.screen,
-                  color,
-                  self.convert((0, y_start)),
-                  self.convert((0, y_end)))
-        draw.line(self.screen,
-                  color,
-                  self.convert((x_start, 0)),
-                  self.convert((x_end, 0)))
+        draw.line(self.screen, color, self.convert((0, y_start)), self.convert((0, y_end)), width=2)
+        draw.line(self.screen, color, self.convert((x_start, 0)), self.convert((x_end, 0)), width=2)
 
     def draw_grid(self, unit=50, color=(150, 150, 150)):
         x_start, y_start = self.inverse_convert(0, 0)
@@ -208,15 +206,9 @@ class Window:
         m_y = int(y_end / unit) + 1
 
         for i in range(n_x, m_x):
-            draw.line(self.screen,
-                      color,
-                      self.convert((unit * i, y_start)),
-                      self.convert((unit * i, y_end)))
+            draw.line(self.screen, color, self.convert((unit * i, y_start)), self.convert((unit * i, y_end)))
         for i in range(n_y, m_y):
-            draw.line(self.screen,
-                      color,
-                      self.convert((x_start, unit * i)),
-                      self.convert((x_end, unit * i)))
+            draw.line(self.screen, color, self.convert((x_start, unit * i)), self.convert((x_end, unit * i)))
 
     def draw_roads(self):
         for i, road in enumerate(self.sim.roads):
@@ -313,9 +305,9 @@ class Window:
 
         if DRAW_GRID:
             # Minor gridlines
-            self.draw_grid(10, (220, 220, 220))
+            self.draw_grid(1, (220, 220, 220))
             # Major gridlines
-            self.draw_grid(100, (200, 200, 200))
+            # self.draw_grid(1, (200, 200, 200))
             self.draw_axes()
 
         self.draw_roads()

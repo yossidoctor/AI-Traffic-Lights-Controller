@@ -1,45 +1,48 @@
 from copy import deepcopy
 from itertools import chain
 from statistics import mean
+from typing import List, Dict
 
 from scipy.spatial import distance
 
 from .road import Road
 from .traffic_signal import TrafficSignal
-from .vehicle_generator import VehicleGenerator
+from .vehicle_generator import VehicleGenerator, Vehicle
 
 
 class Simulation:
     def __init__(self):
         self.t = 0.0  # Time keeping
         self.dt = 1 / 60  # Simulation time step
-        self.frame_count = 0  # Frame time keeping
-        self.roads = []
-        self.vehicle_generators = set()
-        self.traffic_signals = set()
+        self.frame_count = 0  # Frame count keeping
 
-        self._intersections = {}
+        # Lists of objects
+        self.roads: List[Road] = []
+        self.vehicle_generators: List[VehicleGenerator] = []
+        self.traffic_signals: List[TrafficSignal] = []
 
+        self._intersections: Dict[int: List[int]] = {}  # {Road index: List of all intersecting roads}
+
+        # Simulation stats
         self.vehicles_generated = 0
         self.vehicles_on_map = 0
         self.vehicles_reached_destination = 0
-
         self.journey_times = []
         self.standing_times = []
         self.average_wait_time = 0
         self.average_journey_time = 0
 
-    def non_empty_roads(self, roads=None) -> set:
+    def non_empty_roads(self, roads: List[int] = None) -> List[int]:
         """
-        :param roads: a list of road indexes, by default range(len(self.roads))
-        :return: a set of non-empty road indexes
+        :param roads: A list of indexes (of roads), by default range(len(self.roads))
+        :return: A list of indexes (of non-empty roads)
         """
         if not roads:
             roads = range(len(self.roads))
-        return set(filter(lambda road: self.roads[road].vehicles, roads))
+        return list(filter(lambda road: self.roads[road].vehicles, roads))
 
     @property
-    def intersections(self) -> dict:
+    def intersections(self) -> Dict:
         """
         Reduces the intersections' dict to non-empty roads
         :return: a dictionary of {non-empty road indexes: non-empty intersecting road indexes}
@@ -48,14 +51,14 @@ class Simulation:
                     self._intersections.items() if self.roads[road].vehicles and
                     self.non_empty_roads(intersecting_roads))
 
-    def get_vehicles(self, roads=None) -> set:
+    def get_vehicles(self, roads: List[int] = None) -> List[Vehicle]:
         """
-        :param roads: a list of road indexes, by default self.non_empty_roads()
-        :return: a set of all the vehicles on the map
+        :param roads: A list of indexes (of roads), by default self.non_empty_roads()
+        :return: A list of vehicles
         """
         if not roads:
             roads = self.non_empty_roads()
-        return set(chain.from_iterable([self.roads[road].vehicles for road in roads]))
+        return list(chain.from_iterable([self.roads[road].vehicles for road in roads]))
 
     def detect_collisions(self) -> bool:
         """Detects collisions between roads in the intersections"""
@@ -89,12 +92,12 @@ class Simulation:
 
     def create_gen(self, vehicle_rate, paths, ems=False):
         gen = VehicleGenerator(self, vehicle_rate, paths, ems)
-        self.vehicle_generators.add(gen)
+        self.vehicle_generators.append(gen)
 
     def create_signal(self, roads, cycle, slow_distance, slow_factor, stop_distance):
         roads = [[self.roads[i] for i in road_group] for road_group in roads]
         sig = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
-        self.traffic_signals.add(sig)
+        self.traffic_signals.append(sig)
 
     def update(self):
         """
@@ -109,7 +112,7 @@ class Simulation:
 
         # Add vehicles
         for gen in self.vehicle_generators:
-            self.vehicles_generated += gen.update(id=self.vehicles_generated)
+            self.vehicles_generated += gen.update(vehicle_index=self.vehicles_generated)
 
         for signal in self.traffic_signals:
             signal.update(self)
