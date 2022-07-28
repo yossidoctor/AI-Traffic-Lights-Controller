@@ -98,21 +98,21 @@ def turn(t): return range(t, t + n)
 VEHICLE_RATE = 30
 EMS_VEHICLE_RATE = 4
 PATHS = [
-    [3, [0, 8, 6]],
-    [1, [0, *turn(12), 5]],
-    [1, [0, *turn(12 + n), 7]],
+    [3, [0, 8, 6]],  # WEST STRAIGHT EAST
+    [1, [0, *turn(12), 5]],  # WEST RIGHT SOUTH
+    # [1, [0, *turn(12 + n), 7]], # WEST LEFT NORTH
 
-    [3, [1, 9, 7]],
-    [1, [1, *turn(12 + 2 * n), 6]],
-    [1, [1, *turn(12 + 3 * n), 4]],
+    [3, [1, 9, 7]],  # SOUTH STRAIGHT NORTH
+    [1, [1, *turn(12 + 2 * n), 6]],  # SOUTH RIGHT EAST
+    # [1, [1, *turn(12 + 3 * n), 4]],  # SOUTH LEFT WEST
 
-    [3, [2, 10, 4]],
-    [1, [2, *turn(12 + 4 * n), 7]],
-    [1, [2, *turn(12 + 5 * n), 5]],
+    [3, [2, 10, 4]],  # EAST STRAIGHT WEST
+    [1, [2, *turn(12 + 4 * n), 7]],  # EAST RIGHT NORTH
+    # [1, [2, *turn(12 + 5 * n), 5]],  # EAST LEFT SOUTH
 
-    [3, [3, 11, 5]],
-    [1, [3, *turn(12 + 6 * n), 4]],
-    [1, [3, *turn(12 + 7 * n), 6]]
+    [3, [3, 11, 5]],  # NORTH STRAIGHT SOUTH
+    [1, [3, *turn(12 + 6 * n), 4]],  # NORTH RIGHT WEST
+    # [1, [3, *turn(12 + 7 * n), 6]]  # NORTH LEFT EAST
 ]
 
 
@@ -166,158 +166,3 @@ def two_way_intersection():
     sim.create_signal(SIGNALS, CYCLE, SLOW_DISTANCE, SLOW_FACTOR, STOP_DISTANCE)
     sim.create_intersections(INTERSECTIONS_DICT)
     return sim
-
-# nd[14] = [*t87]
-# nd[15] = [*t87]
-# nd[16] = [*t87]
-# nd[17] = [*t87]
-# nd[18] = [*t87]
-# nd[19] = [*t87]
-# nd[20] = [*t87]
-# nd[21] = [*t87]
-# nd[22] = [*t87]
-# nd[23] = [*t87]
-# nd[24] = [*t87]
-# nd[29] = [*t56, *t72, *t117]
-# nd[30] = [*t56, *t72, *t117]
-# nd[31] = [*t56, *t72, *t117]
-# nd[32] = [*t56, *t72, *t117]
-# nd[33] = [*t56, *t72, *t117]
-# nd[34] = [*t56, *t72, *t117]
-# nd[35] = [*t56, *t72, *t117]
-# nd[36] = [*t56, *t72, *t117]
-# nd[37] = [*t56, *t72, *t117]
-# nd[38] = [*t56, *t72, *t117]
-# nd[39] = [*t56, *t72, *t117]
-# nd[44] = [*t117]
-# nd[45] = [*t117]
-# nd[46] = [*t117]
-# nd[47] = [*t117]
-# nd[48] = [*t117]
-# nd[49] = [*t117]
-# nd[50] = [*t117]
-# nd[51] = [*t117]
-# nd[52] = [*t117]
-# nd[53] = [*t117]
-# nd[54] = [*t117]
-# nd[59] = [*t87, *t102]
-# nd[60] = [*t87, *t102]
-# nd[61] = [*t87, *t102]
-# nd[62] = [*t87, *t102]
-# nd[63] = [*t87, *t102]
-# nd[64] = [*t87, *t102]
-# nd[65] = [*t87, *t102]
-# nd[66] = [*t87, *t102]
-# nd[67] = [*t87, *t102]
-# nd[68] = [*t87, *t102]
-# nd[69] = [*t87, *t102]
-# nd[89] = [*t117]
-# nd[90] = [*t117]
-# nd[91] = [*t117]
-# nd[92] = [*t117]
-# nd[93] = [*t117]
-# nd[94] = [*t117]
-# nd[95] = [*t117]
-# nd[96] = [*t117]
-# nd[97] = [*t117]
-# nd[98] = [*t117]
-# nd[99] = [*t117]
-
-
-# # n=15
-# def short_turn(t): return range(t + 2, t + n - 2)
-
-
-# NORTH_STRAIGHT_INTERSECTIONS = {
-#     11: [10, 8, *t56, t12, *t27, *t87]}
-# EAST_STRAIGHT_INTERSECTIONS = {10: [
-#     9, 11, *t102, *t56, *t27, *t117]}
-# SOUTH_STRAIGHT_INTERSECTIONS = {
-#     9: [10, 8, *t87, *t72, *t27, t12]}
-# WEST_STRAIGHT_INTERSECTIONS = {
-#     8: [9, 11, *t87, *t56, *t42, *t117]}
-
-# NORTH_RIGHT_TURN_INTERSECTIONS = {
-#     road: [10, *t56] for road in t102}
-# EAST_RIGHT_TURN_INTERSECTIONS = {
-#     road: [9, *t27] for road in t72}
-# SOUTH_RIGHT_TURN_INTERSECTIONS = {
-#     road: [8, *t117] for road in t42}
-# WEST_RIGHT_TURN_INTERSECTIONS = {
-#     road: [11, *t87] for road in short_turn(12)}
-
-# NORTH_LEFT_TURN_INTERSECTIONS = {road: [10, 8, *t42, *t87, *t27] for road in
-#                                  t117}
-# EAST_LEFT_TURN_INTERSECTIONS = {road: [11, 9, *t56, *t117, t12] for road in
-#                                 t87}
-# SOUTH_LEFT_TURN_INTERSECTIONS = {road: [10, 8, *t87, *t27, *t102] for road in
-#                                  t56}
-# WEST_LEFT_TURN_INTERSECTIONS = {road: [11, 9, *t56, *t117, *t72] for road in
-#                                 t27}
-
-
-# nd = {
-#     **NORTH_STRAIGHT_INTERSECTIONS,
-#     **EAST_STRAIGHT_INTERSECTIONS,
-#     **SOUTH_STRAIGHT_INTERSECTIONS,
-#     **WEST_STRAIGHT_INTERSECTIONS,
-
-#     **NORTH_RIGHT_TURN_INTERSECTIONS,
-#     **EAST_RIGHT_TURN_INTERSECTIONS,
-#     **SOUTH_RIGHT_TURN_INTERSECTIONS,
-#     **WEST_RIGHT_TURN_INTERSECTIONS,
-
-#     **NORTH_LEFT_TURN_INTERSECTIONS,
-#     **EAST_LEFT_TURN_INTERSECTIONS,
-#     **SOUTH_LEFT_TURN_INTERSECTIONS,
-#     **WEST_LEFT_TURN_INTERSECTIONS,
-# }
-
-# # i = 0
-# # for k, v in nd.items():
-# #     i += len(v)
-# #     # print(k, v)
-# # print(i)
-
-# # print(sum(len(value for value in nd.values())))
-
-# for key in range(300):
-#     if key in nd:
-#         value = sorted(nd[key], reverse=True)
-#         if value:
-#             for n in value:
-#                 if n in nd and key in nd[n]:
-#                     nd[n].remove(key)
-
-# # for key in range(300):
-# #     if key in nd:
-# #         value = sorted(nd[key], reverse=True)
-# #         if value:
-# #             for n in value:
-# #                 if n in nd and key in nd[n]:
-# #                     nd[n].remove(key)
-
-# # i = 0
-# # for k, v in nd.items():
-# #     i += len(v)
-# #     # print(k, v)
-# # print(i)
-
-# # # print(sum[len(v for v in nd.values()]))
-
-# for key in range(300):
-#     if key in nd:
-#         value = sorted(nd[key])
-#         if value:
-#             if len(value) > 11:
-#                 print(f"nd[{key}] = {value}")
-#                 # print(value)
-#                 # chunks = [value[x:x+11] for x in range(0, len(value), 100)]
-#                 # print(chunks)
-#             else:
-#                 print(f"nd[{key}] = *short_turn({value[0]-2})")
-
-#             # print(key, value)
-#             # for n in value:
-#             #     if n in nd and key in nd[n]:
-#             #         nd[n].remove(key)

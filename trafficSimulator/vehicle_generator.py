@@ -8,7 +8,7 @@ class VehicleGenerator:
         self._sim = sim
         self._vehicle_rate = vehicle_rate
         self._paths = paths
-        self.ems = ems
+        self.is_ems = ems
 
         self._last_added_time = 0
         self._upcoming_vehicle = self._generate_vehicle()
@@ -21,9 +21,9 @@ class VehicleGenerator:
             r -= weight
             if r <= 0:
                 first_road = self._sim.roads[path[0]]
-                return Vehicle(self._sim.t, path, first_road.start, self.ems)
+                return Vehicle(self._sim.t, path, first_road.start, self.is_ems)
 
-    def update(self, id):
+    def update(self, vehicle_index):
         """Adds a vehicle"""
         vehicle_generated = False
         # If time elapsed after last generation is greater than vehicle period,
@@ -34,7 +34,7 @@ class VehicleGenerator:
                     road.vehicles[-1].x > self._upcoming_vehicle.s0 + self._upcoming_vehicle.length:
                 # If there is space for the generated vehicle; add it
                 self._upcoming_vehicle.time_added = self._sim.t
-                self._upcoming_vehicle.id = id
+                self._upcoming_vehicle.index = vehicle_index
                 road.vehicles.append(self._upcoming_vehicle)
                 # Reset _last_added_time and _upcoming_vehicle
                 self._last_added_time = self._sim.t

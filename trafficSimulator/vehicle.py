@@ -16,13 +16,13 @@ class Vehicle:
         self.current_road_index = 0
         self.generation_time = generation_time
         self.total_standing_time = 0
-        self.ems = ems
+        self.is_ems = ems
         self.ems_color = RED
         self._is_stopped = False
         self._last_time_stopped = 0
 
         # for debugging purposes, remove after completion
-        self.id = None
+        self.index = None  # Initiated at vehicle generator
         self.color = (0, 0, 0) if ems else (0, 0, 255)
         self.crashed = False
 
