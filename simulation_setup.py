@@ -1,12 +1,11 @@
-from trafficSimulator import Simulation
-from trafficSimulator.curve import *
+from TrafficSimulatorGUI import Simulation
+from TrafficSimulatorGUI.curve import *
 
 #
 n = 15  # Curve resolution
 a = 2  # Short offset from (0, 0)
 b = 12  # Long offset from (0, 0)
 length = 50  # Road length
-
 
 # Nodes
 WEST_RIGHT_START = (-b - length, a)
@@ -158,8 +157,8 @@ SLOW_FACTOR = 0.4
 STOP_DISTANCE = 15
 
 
-def two_way_intersection():
-    sim = Simulation()
+def two_way_intersection(generation_limit=None):
+    sim = Simulation(generation_limit)
     sim.create_roads(ROADS)
     sim.create_gen(VEHICLE_RATE, PATHS)
     sim.create_gen(EMS_VEHICLE_RATE, PATHS, ems=True)

@@ -1,4 +1,4 @@
 scipy==1.8.1
 numpy==1.23.1
 pygame==2.1.2
-tensorforce==0.5.5
+gym==0.24.1

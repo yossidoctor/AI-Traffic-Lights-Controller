@@ -6,8 +6,7 @@ from pygame import draw
 DRAW_ROAD_IDS = False  # True for debugging, False by default
 DRAW_VEHICLE_IDS = False  # True for debugging, False by default
 FILL_POLYGONS = True  # False for debugging, True by default
-DRAW_GRID = False  # True for debugging, False by default
-ZOOM_ON_COLLISION = False  # True for debugging, False by default
+DRAW_GRIDLINES = False  # True for debugging, False by default
 
 EVENTS = {pygame.QUIT,
           pygame.MOUSEBUTTONDOWN,
@@ -17,29 +16,26 @@ EVENTS = {pygame.QUIT,
 
 
 class Window:
-    def __init__(self, sim, width, height, zoom):
+    def __init__(self, width, height, zoom, sim=None):
         self.sim = sim
         self.width = width
         self.height = height
         self.zoom = zoom
-        self.quit = False
-        self.last_ems_update_time = 0
 
-        # for debugging purposes, remove after completion
+        self.collision_detected = False
+        self.closed = False
+
+        self.screen = pygame.display.set_mode((self.width, self.height))
         self.offset = (0, 0)
         self.mouse_last = (0, 0)
         self.mouse_down = False
-
-        # Create a pygame window
-        self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.flip()
+        pygame.display.update()
 
-        # Fixed fps
-        self.clock = pygame.time.Clock()
-
-        # To draw text
         pygame.font.init()
         self.text_font = pygame.font.SysFont('Lucida Console', 16)
+
+        self.clock = pygame.time.Clock()
 
         # # Play background music
         # pygame.mixer.init()
@@ -47,75 +43,66 @@ class Window:
         # pygame.mixer.music.set_volume(0.3)
         # pygame.mixer.music.play(start=0, fade_ms=8000)
 
-    def run(self):
-        """ Creates a window and runs the simulation """
+    def update_display(self):
+        self.draw()
+        pygame.display.update()
 
-        while True:
-            # Update simulation
-            self.sim.update()
+    def run(self, action):
+        if action:
+            self.sim.update_signals()
 
-            # Detect collisions
-            if self.sim.vehicles_on_map > 1:
-                detected = self.sim.detect_collisions()
-                if detected:
-                    if ZOOM_ON_COLLISION:
-                        self.zoom = 28
-                        self.sim.dt = 0.0001
-                    # print(f"COLLISION")
-                    return
+        # Update simulation
+        self.sim.update()
 
-            # Draw simulation
-            self.draw()
+        # Detect collisions
+        self.sim.detect_collisions()
 
-            # Update window
-            pygame.display.update()
-            self.clock.tick(60)
+        # Handle UI events
+        self.handle_window_events()
 
-            # Handle all events
-            events = filter(lambda e: e.type in EVENTS, pygame.event.get())
-            for event in events:
-                # Quit program if window is closed
-                if event.type == pygame.QUIT:
-                    self.quit = True
-                    return
-                # Handle mouse events
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    # If mouse button down
-                    if event.button == pygame.BUTTON_LEFT:
-                        # Left click
-                        x, y = pygame.mouse.get_pos()
-                        x0, y0 = self.offset
-                        self.mouse_last = (x - x0 * self.zoom, y - y0 * self.zoom)
-                        self.mouse_down = True
-                    if event.button == pygame.BUTTON_WHEELUP:
-                        # Mouse wheel up
-                        self.zoom *= (self.zoom ** 2 + self.zoom / 4 + 1) / (self.zoom ** 2 + 1)
-                    if event.button == pygame.BUTTON_WHEELDOWN:
-                        # Mouse wheel down
-                        self.zoom *= (self.zoom ** 2 + 1) / (self.zoom ** 2 + self.zoom / 4 + 1)
-                elif event.type == pygame.MOUSEMOTION:
-                    # Drag content
-                    if self.mouse_down:
-                        x1, y1 = self.mouse_last
-                        x2, y2 = pygame.mouse.get_pos()
-                        self.offset = ((x2 - x1) / self.zoom, (y2 - y1) / self.zoom)
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    self.mouse_down = False
-
-                # for debugging purposes, remove after completion
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_1:
-                        # Zoom in on the intersection when pressing 1
-                        self.zoom = 23
-                    if event.key == pygame.K_2:
-                        # Zoom out of the intersection when pressing 2
-                        self.zoom = 7
-                    if event.key == pygame.K_3:
-                        # Slow down the simulation when pressing 3
-                        self.sim.dt = min(self.sim.dt * 2, 0.5)
-                    if event.key == pygame.K_4:
-                        # Speed up the simulation when pressing 4
-                        self.sim.dt = max(self.sim.dt / 2, 0.0001)
+    def handle_window_events(self):
+        events = filter(lambda e: e.type in EVENTS, pygame.event.get())
+        for event in events:
+            # Quit program if window is closed
+            if event.type == pygame.QUIT:
+                self.closed = True
+            # Handle mouse events
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # If mouse button down
+                if event.button == pygame.BUTTON_LEFT:
+                    # Left click
+                    x, y = pygame.mouse.get_pos()
+                    x0, y0 = self.offset
+                    self.mouse_last = (x - x0 * self.zoom, y - y0 * self.zoom)
+                    self.mouse_down = True
+                if event.button == pygame.BUTTON_WHEELUP:
+                    # Mouse wheel up
+                    self.zoom *= (self.zoom ** 2 + self.zoom / 4 + 1) / (self.zoom ** 2 + 1)
+                if event.button == pygame.BUTTON_WHEELDOWN:
+                    # Mouse wheel down
+                    self.zoom *= (self.zoom ** 2 + 1) / (self.zoom ** 2 + self.zoom / 4 + 1)
+            elif event.type == pygame.MOUSEMOTION:
+                # Drag content
+                if self.mouse_down:
+                    x1, y1 = self.mouse_last
+                    x2, y2 = pygame.mouse.get_pos()
+                    self.offset = ((x2 - x1) / self.zoom, (y2 - y1) / self.zoom)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.mouse_down = False
+            # for debugging purposes, todo: remove after completion
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    # Zoom in on the intersection when pressing 1
+                    self.zoom = 23
+                if event.key == pygame.K_2:
+                    # Zoom out of the intersection when pressing 2
+                    self.zoom = 6
+                if event.key == pygame.K_3:
+                    # Slow down the simulation when pressing 3
+                    self.sim.dt = min(self.sim.dt * 2, 0.5)
+                if event.key == pygame.K_4:
+                    # Speed up the simulation when pressing 4
+                    self.sim.dt = max(self.sim.dt / 2, 0.0001)
 
     def convert(self, x, y=None):
         """Converts simulation coordinates to screen coordinates
@@ -125,8 +112,6 @@ class Window:
             return [self.convert(e[0], e[1]) for e in x]
         if isinstance(x, tuple):
             return self.convert(*x)
-        # return (int(self.width / 2 + x * self.zoom),
-        #         int(self.height / 2 + y * self.zoom))
         return (int(self.width / 2 + (x + self.offset[0]) * self.zoom),
                 int(self.height / 2 + (y + self.offset[1]) * self.zoom))
 
@@ -138,14 +123,11 @@ class Window:
             return [self.convert(e[0], e[1]) for e in x]
         if isinstance(x, tuple):
             return self.convert(*x)
-        # return (int((x - self.width / 2) / self.zoom),
-        #         int((y - self.height / 2) / self.zoom))
         return (int(-self.offset[0] + (x - self.width / 2) / self.zoom),
                 int(-self.offset[1] + (y - self.height / 2) / self.zoom))
 
-    def draw_polygon(self, pos, size, angle=None, cos=None, sin=None, centered=True, color=(0, 0, 255)) -> tuple:
-        """Draws a rectangle center at *pos* with size *size* rotated anti-clockwise by *angle*.
-        :returns screen coordinates (x, y)"""
+    def draw_polygon(self, pos, size, angle=None, cos=None, sin=None, centered=True, color=(0, 0, 255)):
+        """Draws a rectangle center at *pos* with size *size* rotated anti-clockwise by *angle*."""
 
         x, y = pos
         l, h = size
@@ -164,13 +146,13 @@ class Window:
             vertices = self.convert([vertex(*e)
                                      for e in [(0, -1), (0, 1), (2, 1), (2, -1)]])
 
-        # for debugging purposes, remove after completion
+        # draw.polygon(self.screen, color, vertices)
+        # for debugging purposes, todo: remove after completion
         width = 0 if FILL_POLYGONS else 2
         x1, x2 = vertices[0][0], vertices[2][0]
         y1, y2 = vertices[0][1], vertices[2][1]
         screen_x = x1 + (x2 - x1) / 2
         screen_y = y1 + (y2 - y1) / 2
-
         draw.polygon(self.screen, color, vertices, width)
         return screen_x, screen_y
 
@@ -220,8 +202,8 @@ class Window:
                                                    color=(180, 180, 220),
                                                    centered=False)
 
-            # for debugging purposes, remove after completion
             if DRAW_ROAD_IDS:
+                # for debugging purposes, todo: remove after completion
                 text_road_index = self.text_font.render(f'{i}', True, (0, 0, 0))
                 self.screen.blit(text_road_index, (screen_x, screen_y))
 
@@ -242,25 +224,23 @@ class Window:
         y = road.start[1] + sin * vehicle.x
 
         vehicle.position = x, y
+        vehicle_color = (0, 0, 0) if vehicle.is_ems else (0, 0, 255)
 
-        screen_x, screen_y = self.draw_polygon((x, y), (l, h), cos=cos, sin=sin, centered=True, color=vehicle.color)
+        screen_x, screen_y = self.draw_polygon((x, y), (l, h), cos=cos, sin=sin, centered=True, color=vehicle_color)
 
-        # for debugging purposes, remove after completion
         if DRAW_VEHICLE_IDS:
+            # for debugging purposes, todo: remove after completion
             text_road_index = self.text_font.render(f'{vehicle.index}', True, (255, 255, 255), (0, 0, 0))
             self.screen.blit(text_road_index, (screen_x, screen_y))
 
-        if vehicle.is_ems and not vehicle.crashed:
-            # time = render(f'Time: {pygame.time.get_ticks() / 1000:.0f}s')
-            if self.sim.t - self.last_ems_update_time >= 1:
-                # print(self.last_ems_update_time, pygame.time.get_ticks())
+        if vehicle.is_ems:
+            if self.sim.t - vehicle.last_ems_update_time >= 1:
+                # Update the EMS color every simulation second
                 vehicle.change_ems_color()
-                self.last_ems_update_time = self.sim.t
-            self.draw_polygon((x, y), (l / 8, h * 0.75), cos=cos, sin=sin, centered=False, color=vehicle.ems_color)
-            self.sim.frame_count += 1
+                vehicle.last_ems_update_time = self.sim.t
+            self.draw_polygon((x, y), (l / 8, h * 0.85), cos=cos, sin=sin, centered=False, color=vehicle.ems_color)
 
     def draw_vehicles(self):
-        # vehicles = self.sim.get_vehicles()
         for vehicle in self.sim.get_vehicles():
             self.draw_vehicle(vehicle)
 
@@ -281,33 +261,24 @@ class Window:
         time = render(f'Time: {pygame.time.get_ticks() / 1000:.0f}s')
         simulation_time = render(f'Simulation Time: {self.sim.t:.2f}')
 
-        # for debugging purposes, remove after completion
-        vehicles_generated = render(f'Generated: {self.sim.vehicles_generated}')
-        vehicles_on_map = render(f'On map: {self.sim.vehicles_on_map}')
-        vehicles_reached_destination = render(f'Reached destination: {self.sim.vehicles_reached_destination}')
-        average_journey_time = render(f'Average journey time: {self.sim.average_journey_time:.2f}')
+        vehicles_generated = render(f'Generated: {self.sim.n_vehicles_generated}')
+        vehicles_on_map = render(f'On map: {self.sim.n_vehicles_on_map}')
         average_wait_time = render(f'Average wait time: {self.sim.average_wait_time:.2f}')
+        average_ems_wait_time = render(f'Average EMS wait time: {self.sim.average_ems_wait_time:.2f}')
 
         self.screen.blit(time, (10, 10))
         self.screen.blit(simulation_time, (10, 35))
-
-        # for debugging purposes, remove after completion
         self.screen.blit(vehicles_generated, (10, 60))
         self.screen.blit(vehicles_on_map, (10, 80))
-        self.screen.blit(vehicles_reached_destination, (10, 100))
-        self.screen.blit(average_journey_time, (10, 130))
-        self.screen.blit(average_wait_time, (10, 150))
+        self.screen.blit(average_wait_time, (10, 100))
+        self.screen.blit(average_ems_wait_time, (10, 120))
 
     def draw(self):
         self.screen.fill((240, 240, 240))
-
-        if DRAW_GRID:
-            # Minor gridlines
+        if DRAW_GRIDLINES:
+            # for debugging purposes, todo: remove after completion
             self.draw_grid(1, (220, 220, 220))
-            # Major gridlines
-            # self.draw_grid(1, (200, 200, 200))
             self.draw_axes()
-
         self.draw_roads()
         self.draw_vehicles()
         self.draw_signals()

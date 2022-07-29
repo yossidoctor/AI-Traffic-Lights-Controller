@@ -11,10 +11,11 @@ from .vehicle_generator import VehicleGenerator, Vehicle
 
 
 class Simulation:
-    def __init__(self):
+    def __init__(self, generation_limit=None):
         self.t = 0.0  # Time keeping
         self.dt = 1 / 60  # Simulation time step
         self.frame_count = 0  # Frame count keeping
+        self.generation_limit = generation_limit
 
         # Lists of objects
         self.roads: List[Road] = []
@@ -24,13 +25,13 @@ class Simulation:
         self._intersections: Dict[int: List[int]] = {}  # {Road index: List of all intersecting roads}
 
         # Simulation stats
-        self.vehicles_generated = 0
-        self.vehicles_on_map = 0
-        self.vehicles_reached_destination = 0
-        self.journey_times = []
-        self.standing_times = []
+        self.collision_detected = False
+        self.n_vehicles_generated = 0
+        self.n_vehicles_on_map = 0
+        self.standing_times_log = []
+        self.standing_ems_times_log = []
         self.average_wait_time = 0
-        self.average_journey_time = 0
+        self.average_ems_wait_time = 0
 
     def non_empty_roads(self, roads: List[int] = None) -> List[int]:
         """
@@ -60,27 +61,21 @@ class Simulation:
             roads = self.non_empty_roads()
         return list(chain.from_iterable([self.roads[road].vehicles for road in roads]))
 
-    def detect_collisions(self) -> bool:
+    def detect_collisions(self) -> None:
         """Detects collisions between roads in the intersections"""
         radius = 15
-        for road, intersecting_roads in self.intersections.items():
-            vehicles = self.roads[road].vehicles
-            intersecting_vehicles = self.get_vehicles(intersecting_roads)
-            for vehicle in vehicles:
-                for intersecting_vehicle in intersecting_vehicles:
-                    # for debugging purposes, remove after completion
-                    if vehicle.crashed and intersecting_vehicle.crashed:
-                        # ignore a previous crash
-                        continue
-                    detected = distance.euclidean(vehicle.position, intersecting_vehicle.position) < radius
-                    if detected:
-                        # for debugging purposes, remove after completion
-                        vehicle.crashed = True
-                        vehicle.color = (255, 0, 0)
-                        intersecting_vehicle.crashed = True
-                        intersecting_vehicle.color = (255, 0, 0)
-                        return True
-        return False
+        if self.n_vehicles_on_map > 1:
+            for road, intersecting_roads in self.intersections.items():
+                vehicles = self.roads[road].vehicles
+                intersecting_vehicles = self.get_vehicles(intersecting_roads)
+                for vehicle in vehicles:
+                    for intersecting_vehicle in intersecting_vehicles:
+                        if distance.euclidean(vehicle.position, intersecting_vehicle.position) < radius:
+                            # for debugging purposes, todo: remove after completion
+                            vehicle.color = (255, 0, 0)
+                            intersecting_vehicle.color = (255, 0, 0)
+                            self.collision_detected = True
+                            return
 
     def create_intersections(self, intersections_dict):
         self._intersections = self._intersections | intersections_dict
@@ -99,6 +94,10 @@ class Simulation:
         sig = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
         self.traffic_signals.append(sig)
 
+    def update_signals(self):
+        for signal in self.traffic_signals:
+            signal.update(self)
+
     def update(self):
         """
         Updates the simulation roads, generates vehicles, updates the traffic signals,
@@ -112,10 +111,11 @@ class Simulation:
 
         # Add vehicles
         for gen in self.vehicle_generators:
-            self.vehicles_generated += gen.update(vehicle_index=self.vehicles_generated)
-
-        for signal in self.traffic_signals:
-            signal.update(self)
+            if self.n_vehicles_generated == self.generation_limit:
+                break
+            generated = gen.update(vehicle_index=self.n_vehicles_generated)
+            self.n_vehicles_generated += generated
+            self.n_vehicles_on_map += generated
 
         # Check roads for out of bounds vehicle
         for i in roads:
@@ -138,17 +138,34 @@ class Simulation:
                 else:
                     # Remove it from its road
                     removed_vehicle = road.vehicles.popleft()
-                    # Update stats
-                    self.vehicles_on_map -= 1
-                    self.vehicles_reached_destination += 1
-                    self.journey_times.append(self.t - removed_vehicle.generation_time)
-                    self.standing_times.append(removed_vehicle.total_standing_time)
-                    self.average_journey_time = mean(self.journey_times)
-                    self.average_wait_time = mean(self.standing_times)
+                    self.n_vehicles_on_map -= 1
+                    if removed_vehicle.is_ems:
+                        self.standing_ems_times_log.append(removed_vehicle.total_standing_time)
+                    else:
+                        self.standing_times_log.append(removed_vehicle.total_standing_time)
 
-        # Reset the counter
-        self.vehicles_on_map = len(self.get_vehicles())
+        self.calculate_average_waiting_time()
 
         # Increment time
         self.t += self.dt
-        self.frame_count += 1
+
+    def calculate_average_waiting_time(self):
+        vehicles = self.get_vehicles()
+        current_standing_times = []
+        current_ems_standing_times = []
+        for vehicle in vehicles:
+            if vehicle.is_stopped:
+                if vehicle.is_ems:
+                    current_ems_standing_times.append(self.t - vehicle.last_time_stopped)
+                else:
+                    current_standing_times.append(self.t - vehicle.last_time_stopped)
+            else:
+                if vehicle.is_ems:
+                    current_ems_standing_times.append(vehicle.total_standing_time)
+                else:
+                    current_standing_times.append(vehicle.total_standing_time)
+        if self.standing_times_log or current_standing_times:
+            self.average_wait_time = mean(self.standing_times_log + current_standing_times)
+        if self.standing_ems_times_log or current_ems_standing_times:
+            self.average_ems_wait_time = mean(self.standing_ems_times_log + current_ems_standing_times)
+            # todo: there's currently a bug in the self.average_ems_wait_time display
