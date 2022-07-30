@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 from pygame import draw
 
-# for debugging purposes, remove after completion
+# for debugging purposes, todo: remove after completion
 DRAW_ROAD_IDS = False  # True for debugging, False by default
 DRAW_VEHICLE_IDS = False  # True for debugging, False by default
 FILL_POLYGONS = True  # False for debugging, True by default
@@ -22,9 +22,11 @@ class Window:
         self.height = height
         self.zoom = zoom
 
+        # Flags
         self.collision_detected = False
         self.closed = False
 
+        # Init display
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.offset = (0, 0)
         self.mouse_last = (0, 0)
@@ -32,22 +34,28 @@ class Window:
         pygame.display.flip()
         pygame.display.update()
 
+        # Init display font
         pygame.font.init()
         self.text_font = pygame.font.SysFont('Lucida Console', 16)
 
+        # Init clock for fixed FPS
         self.clock = pygame.time.Clock()
 
-        # # Play background music
+        # # Init background music player todo: un-comment
         # pygame.mixer.init()
-        # pygame.mixer.music.load("Slow_Ride.mp3")
+        # pygame.mixer.music.load("slow_ride.mp3")
         # pygame.mixer.music.set_volume(0.3)
         # pygame.mixer.music.play(start=0, fade_ms=8000)
 
-    def update_display(self):
-        self.draw()
+    def update_display(self, episode_data=None):
+        self.draw(episode_data)
         pygame.display.update()
 
     def run(self, action):
+        """
+        Applies the action and runs a single simulation cycle (update and collision check)
+        @param action: the action to apply to the traffic signals
+        """
         if action:
             self.sim.update_signals()
 
@@ -61,6 +69,9 @@ class Window:
         self.handle_window_events()
 
     def handle_window_events(self):
+        """
+        Handles UI events such as dragging the content, zooming in and out
+        """
         events = filter(lambda e: e.type in EVENTS, pygame.event.get())
         for event in events:
             # Quit program if window is closed
@@ -216,6 +227,10 @@ class Window:
                     self.draw_arrow(pos, (-1.25, 0.2), cos=road.angle_cos, sin=road.angle_sin)
 
     def draw_vehicle(self, vehicle):
+        """
+        Updates the vehicle position attribute and draws it on the display
+        @param vehicle: the Vehicle object to draw
+        """
         road = self.sim.roads[vehicle.path[vehicle.current_road_index]]
         l, h = vehicle.length, 2
         sin, cos = road.angle_sin, road.angle_cos
@@ -254,26 +269,30 @@ class Window:
                                 (1 - a) * road.end[1] + a * road.start[1])
                     self.draw_polygon(position, (1, 3), cos=road.angle_cos, sin=road.angle_sin, color=color)
 
-    def draw_status(self):
+    def draw_status(self, episode_data=None):
         def render(text, color=(0, 0, 0), background=None):
             return self.text_font.render(text, True, color, background)
 
-        time = render(f'Time: {pygame.time.get_ticks() / 1000:.0f}s')
-        simulation_time = render(f'Simulation Time: {self.sim.t:.2f}')
+        time_render = render(f'Time: {pygame.time.get_ticks() / 1000:.0f}s')
+        simulation_time_render = render(f'Simulation Time: {self.sim.t:.2f}')
+        vehicles_generated_render = render(f'Generated: {self.sim.n_vehicles_generated}')
+        vehicles_on_map_render = render(f'On map: {self.sim.n_vehicles_on_map}')
+        average_wait_time_render = render(f'Average wait time: {self.sim.average_wait_time:.2f}')
+        average_ems_wait_time_render = render(f'Average EMS wait time: {self.sim.average_ems_wait_time:.2f}')
 
-        vehicles_generated = render(f'Generated: {self.sim.n_vehicles_generated}')
-        vehicles_on_map = render(f'On map: {self.sim.n_vehicles_on_map}')
-        average_wait_time = render(f'Average wait time: {self.sim.average_wait_time:.2f}')
-        average_ems_wait_time = render(f'Average EMS wait time: {self.sim.average_ems_wait_time:.2f}')
+        self.screen.blit(time_render, (10, 10))
+        self.screen.blit(simulation_time_render, (10, 35))
+        self.screen.blit(vehicles_generated_render, (10, 60))
+        self.screen.blit(vehicles_on_map_render, (10, 80))
+        self.screen.blit(average_wait_time_render, (10, 100))
+        self.screen.blit(average_ems_wait_time_render, (10, 120))
 
-        self.screen.blit(time, (10, 10))
-        self.screen.blit(simulation_time, (10, 35))
-        self.screen.blit(vehicles_generated, (10, 60))
-        self.screen.blit(vehicles_on_map, (10, 80))
-        self.screen.blit(average_wait_time, (10, 100))
-        self.screen.blit(average_ems_wait_time, (10, 120))
+        if episode_data:
+            episode, n_episodes = episode_data
+            episode_data_render = render(f'EPISODE: {episode}/{n_episodes}')
+            self.screen.blit(episode_data_render, (10, 150))
 
-    def draw(self):
+    def draw(self, episode_data=None):
         self.screen.fill((240, 240, 240))
         if DRAW_GRIDLINES:
             # for debugging purposes, todo: remove after completion
@@ -282,4 +301,4 @@ class Window:
         self.draw_roads()
         self.draw_vehicles()
         self.draw_signals()
-        self.draw_status()
+        self.draw_status(episode_data)
