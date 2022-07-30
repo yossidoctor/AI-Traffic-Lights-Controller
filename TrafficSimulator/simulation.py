@@ -1,39 +1,35 @@
 from copy import deepcopy
 from itertools import chain
 from statistics import mean
-from typing import List, Dict
 
-from scipy.spatial import distance
-
-from .road import Road
+from .road import Road, distance
 from .traffic_signal import TrafficSignal
-from .vehicle_generator import VehicleGenerator, Vehicle
+from .vehicle_generator import VehicleGenerator
 
 
 class Simulation:
     def __init__(self, generation_limit=None):
         self.t = 0.0  # Time keeping
         self.dt = 1 / 60  # Simulation time step
-        self.frame_count = 0  # Frame count keeping
         self.generation_limit = generation_limit
 
         # Lists of objects
-        self.roads: List[Road] = []
-        self.vehicle_generators: List[VehicleGenerator] = []
-        self.traffic_signals: List[TrafficSignal] = []
+        self.roads = []
+        self.vehicle_generators = []
+        self.traffic_signals = []
 
-        self._intersections: Dict[int: List[int]] = {}  # {Road index: List of all intersecting roads}
+        self._intersections = {}  # {Road index: List of all intersecting roads' indexes}
 
         # Simulation stats
-        self.collision_detected = False
+        self.collision_detected = False  # True is a terminal state (as defined under the MDP of the task)
         self.n_vehicles_generated = 0
-        self.n_vehicles_on_map = 0
+        self.n_vehicles_on_map = 0  # 0 is a terminal state (as defined under the MDP of the task)
         self.standing_times_log = []
         self.standing_ems_times_log = []
         self.average_wait_time = 0
         self.average_ems_wait_time = 0
 
-    def non_empty_roads(self, roads: List[int] = None) -> List[int]:
+    def non_empty_roads(self, roads=None):
         """
         :param roads: A list of indexes (of roads), by default range(len(self.roads))
         :return: A list of indexes (of non-empty roads)
@@ -43,7 +39,7 @@ class Simulation:
         return list(filter(lambda road: self.roads[road].vehicles, roads))
 
     @property
-    def intersections(self) -> Dict:
+    def intersections(self):
         """
         Reduces the intersections' dict to non-empty roads
         :return: a dictionary of {non-empty road indexes: non-empty intersecting road indexes}
@@ -52,7 +48,7 @@ class Simulation:
                     self._intersections.items() if self.roads[road].vehicles and
                     self.non_empty_roads(intersecting_roads))
 
-    def get_vehicles(self, roads: List[int] = None) -> List[Vehicle]:
+    def get_vehicles(self, roads=None):
         """
         :param roads: A list of indexes (of roads), by default self.non_empty_roads()
         :return: A list of vehicles
@@ -85,8 +81,8 @@ class Simulation:
             road = Road(start, end)
             self.roads.append(road)
 
-    def create_gen(self, vehicle_rate, paths, ems=False):
-        gen = VehicleGenerator(self, vehicle_rate, paths, ems)
+    def create_gen(self, vehicle_rate, paths_dict, ems=False):
+        gen = VehicleGenerator(self, vehicle_rate, paths_dict, ems)
         self.vehicle_generators.append(gen)
 
     def create_signal(self, roads, cycle, slow_distance, slow_factor, stop_distance):
@@ -111,7 +107,7 @@ class Simulation:
 
         # Add vehicles
         for gen in self.vehicle_generators:
-            if self.n_vehicles_generated == self.generation_limit:
+            if self.generation_limit and self.n_vehicles_generated == self.generation_limit:
                 break
             generated = gen.update(vehicle_index=self.n_vehicles_generated)
             self.n_vehicles_generated += generated
@@ -168,4 +164,3 @@ class Simulation:
             self.average_wait_time = mean(self.standing_times_log + current_standing_times)
         if self.standing_ems_times_log or current_ems_standing_times:
             self.average_ems_wait_time = mean(self.standing_ems_times_log + current_ems_standing_times)
-            # todo: there's currently a bug in the self.average_ems_wait_time display

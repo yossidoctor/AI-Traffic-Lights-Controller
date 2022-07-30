@@ -1,7 +1,6 @@
-from TrafficSimulatorGUI import Simulation
-from TrafficSimulatorGUI.curve import *
+from TrafficSimulator import Simulation
+from TrafficSimulator.curve import turn_road, TURN_LEFT, TURN_RIGHT
 
-#
 n = 15  # Curve resolution
 a = 2  # Short offset from (0, 0)
 b = 12  # Long offset from (0, 0)
@@ -96,7 +95,7 @@ def turn(t): return range(t, t + n)
 # Vehicle generator
 VEHICLE_RATE = 30
 EMS_VEHICLE_RATE = 4
-PATHS = [
+PATHS_DICT = [
     [3, [0, 8, 6]],  # WEST STRAIGHT EAST
     [1, [0, *turn(12), 5]],  # WEST RIGHT SOUTH
     # [1, [0, *turn(12 + n), 7]], # WEST LEFT NORTH
@@ -160,8 +159,8 @@ STOP_DISTANCE = 15
 def two_way_intersection(generation_limit=None):
     sim = Simulation(generation_limit)
     sim.create_roads(ROADS)
-    sim.create_gen(VEHICLE_RATE, PATHS)
-    sim.create_gen(EMS_VEHICLE_RATE, PATHS, ems=True)
+    sim.create_gen(VEHICLE_RATE, PATHS_DICT)
+    sim.create_gen(EMS_VEHICLE_RATE, PATHS_DICT, ems=True)
     sim.create_signal(SIGNALS, CYCLE, SLOW_DISTANCE, SLOW_FACTOR, STOP_DISTANCE)
     sim.create_intersections(INTERSECTIONS_DICT)
     return sim
