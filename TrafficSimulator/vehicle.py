@@ -5,17 +5,17 @@ BLUE = (51, 51, 255)
 
 
 class Vehicle:
-    def __init__(self, path, position, ems):
+    def __init__(self, path, position, is_ems):
         """
-        :param generation_time: simulation time at which the vehicle was generated
         :param path: a list of road indexes
         :param position: simulation position (x, y)
+        :param is_ems: if the vehicle is EMS
         """
         self.position = position
         self.path = path
         self.current_road_index = 0
         self.total_standing_time = 0
-        self.is_ems = ems
+        self.is_ems = is_ems
         self.ems_color = RED
         self.is_stopped = False
         self.last_time_stopped = None
@@ -25,7 +25,7 @@ class Vehicle:
         self.index = None  # Initiated at vehicle generator
 
         self.length = 4
-        self.s0 = 4
+        self.s0 = 5
         self.T = 1
         self.v_max = 16.6
         self.a_max = 1.44
