@@ -22,12 +22,14 @@ class Simulation:
 
         # Simulation stats
         self.collision_detected = False  # True is a terminal state (as defined under the MDP of the task)
+        self.collisions = 0
         self.n_vehicles_generated = 0
         self.n_vehicles_on_map = 0  # 0 is a terminal state (as defined under the MDP of the task)
         self.standing_times_log = []
         self.standing_ems_times_log = []
         self.average_wait_time = 0
         self.average_ems_wait_time = 0
+        self.passed_green_signal = 0
 
     def non_empty_roads(self, roads=None):
         """
@@ -71,6 +73,7 @@ class Simulation:
                             vehicle.color = (255, 0, 0)
                             intersecting_vehicle.color = (255, 0, 0)
                             self.collision_detected = True
+                            self.collisions += 1
                             return
 
     def create_intersections(self, intersections_dict):
@@ -85,14 +88,19 @@ class Simulation:
         gen = VehicleGenerator(self, vehicle_rate, paths_dict, ems)
         self.vehicle_generators.append(gen)
 
-    def create_signal(self, roads, cycle, slow_distance, slow_factor, stop_distance):
-        roads = [[self.roads[i] for i in road_group] for road_group in roads]
-        sig = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
+    def create_signal(self, road_groups, cycle, slow_distance, slow_factor, stop_distance):
+        roads = [[self.roads[i] for i in road_group] for road_group in road_groups]
+        sig = TrafficSignal(road_groups, roads, cycle, slow_distance, slow_factor, stop_distance)
         self.traffic_signals.append(sig)
 
     def update_signals(self):
         for signal in self.traffic_signals:
-            signal.update(self)
+            signal.update(self.t)
+
+    # def update_signals(self, actions_list):
+    # for i, signal in enumerate(self.traffic_signals):
+    #     if actions_list[i]:
+    #         signal.update(self.t)
 
     def update(self):
         """
@@ -104,6 +112,13 @@ class Simulation:
         # Update every road
         for i in roads:
             self.roads[i].update(self.dt, self.t)
+
+        group = []
+        signal = self.traffic_signals[0]
+        if signal.current_cycle[1]:  # (True, False) [0,2] [1, 3]
+            group = [1, 3]
+        else:
+            group = [0, 2]
 
         # Add vehicles
         for gen in self.vehicle_generators:
@@ -121,6 +136,8 @@ class Simulation:
             if vehicle.x >= road.length:
                 # If vehicle has a next road
                 if vehicle.current_road_index + 1 < len(vehicle.path):
+                    if i in group:
+                        self.passed_green_signal += 1
                     # Update current road to next road
                     vehicle.current_road_index += 1
                     # Create a copy and reset some vehicle properties

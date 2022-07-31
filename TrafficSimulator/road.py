@@ -37,6 +37,9 @@ class Road:
         """
         n = len(self.vehicles)
 
+        # TODO: FIX: WHEN SWITCHING TO A RED LIGHT FOR A VEHICLE THAT APPROACHES A TRAFFIC LIGHT AT HIGH SPEED
+        #  AND ITS CLOSE, THE VEHICLE DOESNT STOP.
+
         if n > 0:
             # Update first vehicle
             self.vehicles[0].update(None, dt)

@@ -1,108 +1,82 @@
-import numpy as np
-from gym import Env
-from gym.spaces import Discrete, Box, Tuple
+from gym.spaces import Discrete  # TODO: REMOVE
 
 from TrafficSimulator import Window, two_way_intersection
 
 WINDOW_ARGS = {'width': 1000, 'height': 700, 'zoom': 5.57}  # 1080p 14" laptop monitor with 150% scaling
 
 
-class TrafficEnvironment(Env):
+class Environment:
     def __init__(self):
-        """
-        The Action Space object corresponding to valid actions: Switch (1) and Don't Switch (0)
-        The Observation Space object corresponding to valid observations:
-        A tuple of 2 arrays of the waiting times of civilian and ems vehicles on the map
-        """
-        self.generation_limit = 30
+        self.generation_limit = 50
         self.window = Window(**WINDOW_ARGS)
         self.action_space = Discrete(2)
-        observation_space = Box(low=np.array([0]), high=np.array([self.generation_limit]))
-        self.observation_space = Tuple(spaces=(observation_space, observation_space))
-        self.observation = 0, 0
+        # TODO: make it of length len(env.window.sim.traffic_signals)
+        # TODO: remove Discrete action space
 
-    def step(self, step_action: int):
-        """
-        Takes a step in the environment using an action returning the next observation, reward,
-        if the environment terminated and more information.
-        :param step_action: 1 (Switch) or 0 (Don't Switch)
-        """
+    def step(self, step_action, training=False):
         # Applies the action and runs a single simulation update cycle.
-        self.window.run(step_action)
+        self.window.run(step_action, training=training)
 
-        new_observation = self.window.sim.average_wait_time, self.window.sim.average_ems_wait_time
+        new_state = self._get_new_state()
 
         # A calculated reward based on pre-defined parameters.
-        step_reward = self._calculate_reward(*new_observation)
+        step_reward = self._calculate_reward(new_state)
 
         # Whether a terminal state (as defined under the MDP of the task) is reached.
         terminated = self.window.sim.n_vehicles_on_map == 0 or self.window.sim.collision_detected
 
-        # truncated - whether a truncation condition outside the scope of the MDP is satisfied.
+        # Whether a truncation condition outside the scope of the MDP is satisfied.
         # Ends the episode prematurely before a terminal state is reached.
-        step_info = {'truncated': self.window.closed}
+        truncated = self.window.closed
 
-        return new_observation, step_reward, terminated, step_info
+        return new_state, step_reward, terminated, truncated
 
-    def _calculate_reward(self, average_wait_time, average_ems_wait_time):
-        # self.average_wait_time = 0
-        # self.average_ems_wait_time = 0
+    def _get_new_state(self):
+        # TODO: ADD DOCS
+        new_state = []
+        for i in range(4):
+            road = self.window.sim.roads[i]
+            signal_state = road.traffic_signal_state
+            standing_vehicles = [vehicle for vehicle in road.vehicles if vehicle.is_stopped]
+            n_standing_vehicles = len(standing_vehicles)
+            has_standing_ems = any(vehicle.is_ems for vehicle in standing_vehicles)
+            new_state.append((signal_state, n_standing_vehicles, has_standing_ems))
+        return tuple(new_state)
+
+    def _calculate_reward(self, new_state):
+        # TODO: ADD DOCS
+        step_reward = 0
+
+        step_reward += self.window.sim.passed_green_signal  # TODO: ENCAPSULATE SIM ATTRIBUTE
+        self.window.sim.passed_green_signal = 0  # Reset counter
+        step_reward -= sum(standing_vehicles for x, standing_vehicles, z in new_state)
+        step_reward -= sum(has_standing_ems for x, y, has_standing_ems in new_state) * 2
         if self.window.sim.collision_detected:
-            step_reward = -100
-        else:
-            if average_wait_time >= self.observation[0]:
-                step_reward = -1
-            else:
-                step_reward = 3
-            if average_ems_wait_time >= self.observation[1]:
-                step_reward -= 3
-            else:
-                step_reward += 6
-
+            step_reward -= 150
         return step_reward
 
-    def render(self, episode_data):
+    def render(self):
         """
-        Renders the environment observation with modes depending on the output
+        Renders the environment state with modes depending on the output
         """
-        self.window.update_display(episode_data)
+        self.window.update_display()
         self.window.clock.tick(60)
 
-    def reset(self, episode_data):
+    def reset(self):
         """
-        Resets the environment to an initial state, returning the initial observation.
-        :return: the initial observation
+        Resets the environment to an initial state, returning the initial state.
+        :return: the initial state
         """
-        # for debugging purposes, todo: remove after completion
-        dt = self.window.sim.dt if self.window.sim else 1 / 60
 
+        # dt = self.window.sim.dt if self.window.sim else 1 / 60  # for debugging purposes, todo: remove after completion
         self.window.sim = two_way_intersection(self.generation_limit)
-        self.window.sim.dt = dt  # for debugging purposes, todo: remove after completion
-        self.window.update_display(episode_data)
-        self.observation = 0, 0
+        # self.window.sim.dt = dt  # for debugging purposes, todo: remove after completion
+        self.window.update_display()
+        init_state = tuple()
+        return init_state
 
-        return self.observation
-
-
-env = TrafficEnvironment()
-
-n_episodes = 10
-for episode in range(1, n_episodes + 1):
-    state = env.reset((0, n_episodes))
-    done = False
-    truncated = False
-    score = 0
-
-    while not done:
-        env.render((episode, n_episodes))
-        action = env.action_space.sample()  # agent action
-        new_state, reward, done, info = env.step(action)
-        if info['truncated']:
-            truncated = True
-            break
-        score += reward
-
-    if truncated:
-        break
-
-    print('Episode:{} Score:{}'.format(episode, score))
+# todo:
+#        fix ems average thing
+#        clean up code, encapsulate sim data
+#        train model on 1000+ iterations
+#        send a switch action in a fixed cycle (move out of update)

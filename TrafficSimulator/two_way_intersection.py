@@ -117,8 +117,8 @@ def turn(t): return range(t, t + n)
 
 
 # Vehicle generator
-VEHICLE_RATE = 30
-EMS_VEHICLE_RATE = 4
+VEHICLE_RATE = 35
+EMS_VEHICLE_RATE = 5
 PATHS_DICT = [
     [3, [0, 8, 6]],  # WEST STRAIGHT EAST
     [1, [0, *turn(12), 5]],  # WEST RIGHT SOUTH
@@ -173,7 +173,7 @@ INTERSECTIONS_DICT = {
 }
 
 # Signals
-SIGNALS = [[0, 2], [1, 3]]
+SIGNALS = [[0, 2], [1, 3]]  # WEST, EAST, SOUTH NORTH
 CYCLE = [(False, True), (True, False)]
 SLOW_DISTANCE = 50
 SLOW_FACTOR = 0.4

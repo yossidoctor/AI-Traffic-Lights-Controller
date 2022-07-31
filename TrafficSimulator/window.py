@@ -51,7 +51,7 @@ class Window:
         self.draw(episode_data)
         pygame.display.update()
 
-    def run(self, action):
+    def run(self, action, training=False):
         """
         Applies the action and runs a single simulation cycle (update and collision check)
         @param action: the action to apply to the traffic signals
@@ -59,14 +59,22 @@ class Window:
         if action:
             self.sim.update_signals()
 
-        # Update simulation
-        self.sim.update()
+        for _ in range(200):
+            if self.closed:
+                return
 
-        # Detect collisions
-        self.sim.detect_collisions()
+            # Update simulation
+            self.sim.update()
 
-        # Handle UI events
-        self.handle_window_events()
+            if not training:
+                self.update_display(None)
+                self.clock.tick(60)
+
+            # Detect collisions
+            self.sim.detect_collisions()
+
+            # Handle UI events
+            self.handle_window_events()
 
     def handle_window_events(self):
         """
@@ -109,10 +117,14 @@ class Window:
                     # Zoom out of the intersection when pressing 2
                     self.zoom = 6
                 if event.key == pygame.K_3:
-                    # Slow down the simulation when pressing 3
-                    self.sim.dt = min(self.sim.dt * 2, 0.5)
+                    # Speed up the simulation when pressing 3
+                    self.sim.dt = min(self.sim.dt * 2, 0.5)  # todo * 2
+                    # self.sim.dt = 0.99999
+                    # 1000 in 70s # 16 a sec
+                    # 5000 in 430s # 11 a sec
+                    # 14000 in 1260
                 if event.key == pygame.K_4:
-                    # Speed up the simulation when pressing 4
+                    # Slow down the simulation when pressing 4
                     self.sim.dt = max(self.sim.dt / 2, 0.0001)
 
     def convert(self, x, y=None):
