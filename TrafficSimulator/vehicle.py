@@ -21,8 +21,7 @@ class Vehicle:
         self.last_time_stopped = None
         self.last_ems_update_time = 0
 
-        # for debugging purposes, todo: remove after completion
-        self.index = None  # Initiated at vehicle generator
+        self.generation_index = None  # for debugging purposes, initiated at vehicle generator
 
         self.length = 4
         self.s0 = 5

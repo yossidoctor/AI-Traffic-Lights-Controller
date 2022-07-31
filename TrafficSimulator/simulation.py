@@ -109,7 +109,7 @@ class Simulation:
         for gen in self.vehicle_generators:
             if self.generation_limit and self.n_vehicles_generated == self.generation_limit:
                 break
-            generated = gen.update(vehicle_index=self.n_vehicles_generated)
+            generated = gen.update()
             self.n_vehicles_generated += generated
             self.n_vehicles_on_map += generated
 
