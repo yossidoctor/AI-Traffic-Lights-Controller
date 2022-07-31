@@ -28,7 +28,9 @@ def train_agent(q_agent, env, path, n_episodes=10000):
 
         while not done:
             action = q_agent.get_action(state)
-            n_state, reward, done, info = env.step(action, training=True)
+            n_state, reward, done, truncated = env.step(action, training=True)
+            if truncated:
+                return
             q_agent.update(state, action, n_state, reward)
             total_scores += reward
             total_collisions += env.window.sim.collisions
@@ -52,7 +54,9 @@ def validate_agent(q_agent, env, n_episodes=5):
         while not done:
             env.render()
             action = q_agent.get_action(state)
-            next_state, reward, done, info = env.step(action)
+            next_state, reward, done, truncated = env.step(action)
+            if truncated:
+                return
             score += reward
             state = next_state
 
