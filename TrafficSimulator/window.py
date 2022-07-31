@@ -2,11 +2,11 @@ import numpy as np
 import pygame
 from pygame import draw
 
-# for debugging purposes, todo: remove after completion
+# debugging flags todo: reset to default values
 DRAW_ROAD_IDS = False  # True for debugging, False by default
 DRAW_VEHICLE_IDS = False  # True for debugging, False by default
 FILL_POLYGONS = True  # False for debugging, True by default
-DRAW_GRIDLINES = False  # True for debugging, False by default
+DRAW_GRIDLINES = True  # True for debugging, False by default
 
 EVENTS = {pygame.QUIT,
           pygame.MOUSEBUTTONDOWN,
@@ -206,8 +206,9 @@ class Window:
     def draw_roads(self):
         for i, road in enumerate(self.sim.roads):
             # Draw road background
+            road_len = road.length
             screen_x, screen_y = self.draw_polygon(road.start,
-                                                   (road.length, 3.7),
+                                                   (road_len, 3.7),
                                                    cos=road.angle_cos,
                                                    sin=road.angle_sin,
                                                    color=(180, 180, 220),
@@ -219,10 +220,10 @@ class Window:
                 self.screen.blit(text_road_index, (screen_x, screen_y))
 
             # Draw road arrow
-            if road.length > 5:
-                for j in np.arange(-0.5 * road.length, 0.5 * road.length, 10):
-                    pos = (road.start[0] + (road.length / 2 + j + 3) * road.angle_cos,
-                           road.start[1] + (road.length / 2 + j + 3) * road.angle_sin)
+            if road_len > 5:
+                for j in np.arange(-0.5 * road_len, 0.5 * road_len, 10):
+                    pos = (road.start[0] + (road_len / 2 + j + 3) * road.angle_cos,
+                           road.start[1] + (road_len / 2 + j + 3) * road.angle_sin)
 
                     self.draw_arrow(pos, (-1.25, 0.2), cos=road.angle_cos, sin=road.angle_sin)
 
@@ -232,7 +233,7 @@ class Window:
         @param vehicle: the Vehicle object to draw
         """
         road = self.sim.roads[vehicle.path[vehicle.current_road_index]]
-        l, h = vehicle.length, 2
+        l, w = vehicle.length, vehicle.width
         sin, cos = road.angle_sin, road.angle_cos
 
         x = road.start[0] + cos * vehicle.x
@@ -241,19 +242,19 @@ class Window:
         vehicle.position = x, y
         vehicle_color = (0, 0, 0) if vehicle.is_ems else (0, 0, 255)
 
-        screen_x, screen_y = self.draw_polygon((x, y), (l, h), cos=cos, sin=sin, centered=True, color=vehicle_color)
+        screen_x, screen_y = self.draw_polygon((x, y), (l, w), cos=cos, sin=sin, centered=True, color=vehicle_color)
 
         if DRAW_VEHICLE_IDS:
             # for debugging purposes, todo: remove after completion
-            text_road_index = self.text_font.render(f'{vehicle.index}', True, (255, 255, 255), (0, 0, 0))
+            text_road_index = self.text_font.render(f'{vehicle.generation_index}', True, (255, 255, 255), (0, 0, 0))
             self.screen.blit(text_road_index, (screen_x, screen_y))
 
         if vehicle.is_ems:
-            if self.sim.t - vehicle.last_ems_update_time >= 1:
+            if self.sim.t - vehicle.last_ems_update_t >= 1:
                 # Update the EMS color every simulation second
-                vehicle.change_ems_color()
-                vehicle.last_ems_update_time = self.sim.t
-            self.draw_polygon((x, y), (l / 8, h * 0.85), cos=cos, sin=sin, centered=False, color=vehicle.ems_color)
+                vehicle.update_ems_color()
+                vehicle.last_ems_update_t = self.sim.t
+            self.draw_polygon((x, y), (l / 8, w * 0.85), cos=cos, sin=sin, centered=False, color=vehicle.ems_color)
 
     def draw_vehicles(self):
         for vehicle in self.sim.get_vehicles():
@@ -296,7 +297,10 @@ class Window:
         self.screen.fill((240, 240, 240))
         if DRAW_GRIDLINES:
             # for debugging purposes, todo: remove after completion
+            # Major gridlines
             self.draw_grid(1, (220, 220, 220))
+            # Minor gridlines
+            self.draw_grid(5, (200, 200, 200))
             self.draw_axes()
         self.draw_roads()
         self.draw_vehicles()

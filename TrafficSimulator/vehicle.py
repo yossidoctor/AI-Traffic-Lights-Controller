@@ -6,24 +6,24 @@ BLUE = (51, 51, 255)
 
 class Vehicle:
     def __init__(self, path, position, is_ems):
-        """
-        :param path: a list of road indexes
-        :param position: simulation position (x, y)
-        :param is_ems: if the vehicle is EMS
-        """
-        self.position = position
         self.path = path
         self.current_road_index = 0
-        self.total_standing_time = 0
+
+        self.position = position
+
         self.is_ems = is_ems
         self.ems_color = RED
+
         self.is_stopped = False
-        self.last_time_stopped = None
-        self.last_ems_update_time = 0
+        self.last_stop_t = None
+        self.last_ems_update_t = 0
+        self.total_standing_t = 0
 
         self.generation_index = None  # for debugging purposes, initiated at vehicle generator
 
         self.length = 4
+        self.width = 2
+
         self.s0 = 5
         self.T = 1
         self.v_max = 16.6
@@ -35,7 +35,7 @@ class Vehicle:
         self.v = self.v_max
         self.a = 0
 
-    def change_ems_color(self):
+    def update_ems_color(self):
         if self.ems_color == RED:
             self.ems_color = BLUE
         else:
@@ -69,15 +69,15 @@ class Vehicle:
         if self.is_stopped:
             self.a = -self.b_max * self.v / self.v_max
 
-    def stop(self, time):
-        self.last_time_stopped = time
+    def stop(self, t):
+        self.last_stop_t = t
         self.is_stopped = True
 
-    def unstop(self, time):
+    def unstop(self, t):
         if self.is_stopped:
-            standing_time = time - self.last_time_stopped
-            self.total_standing_time += standing_time
-            self.last_time_stopped = None
+            standing_time = t - self.last_stop_t
+            self.total_standing_t += standing_time
+            self.last_stop_t = None
         self.is_stopped = False
 
     def slow(self, v):

@@ -29,11 +29,11 @@ class Road:
             return self.traffic_signal.current_cycle[i]
         return True
 
-    def update(self, dt, time):
+    def update(self, dt, t):
         """
-        Updates all the vehicles on the road
+        Updates all the vehicles on the road, depending on traffic and traffic signal conditions
         :param dt: simulation time step
-        :param time: simulation time
+        :param t: simulation time
         """
         n = len(self.vehicles)
 
@@ -48,7 +48,7 @@ class Road:
             # Check for traffic signal
             if self.traffic_signal_state:
                 # If traffic signal is green or doesn't exist, let the vehicles through
-                self.vehicles[0].unstop(time)
+                self.vehicles[0].unstop(t)
                 for vehicle in self.vehicles:
                     vehicle.unslow()
             else:
@@ -59,4 +59,4 @@ class Road:
                 slow_distance = self.traffic_signal.stop_distance
                 if self.length - slow_distance <= self.vehicles[0].x <= self.length - slow_distance / 2:
                     # Stop vehicles in the stop zone
-                    self.vehicles[0].stop(time)
+                    self.vehicles[0].stop(t)

@@ -5,8 +5,32 @@ n = 15  # Curve resolution
 a = 2  # Short offset from (0, 0)
 b = 12  # Long offset from (0, 0)
 length = 50  # Road length
+offset = 25  # Intersection offset from the center
 
 # Nodes
+# WEST_RIGHT_START = (-b - length - offset, a)
+# WEST_LEFT_START = (-b - length - offset, -a)
+#
+# SOUTH_RIGHT_START = (a - offset, b + length)
+# SOUTH_LEFT_START = (-a - offset, b + length)
+#
+# EAST_RIGHT_START = (b, -a)
+# EAST_LEFT_START = (b, a)
+#
+# NORTH_RIGHT_START = (-a - offset, -b - length)
+# NORTH_LEFT_START = (a - offset, -b - length)
+#
+# WEST_RIGHT = (-b - offset, a)
+# WEST_LEFT = (-b - offset, -a)
+#
+# SOUTH_RIGHT = (a - offset, b)
+# SOUTH_LEFT = (-a - offset, b)
+#
+# EAST_RIGHT = (b - offset, -a)
+# EAST_LEFT = (b - offset, a)
+#
+# NORTH_RIGHT = (-a - offset, -b)
+# NORTH_LEFT = (a - offset, -b)
 WEST_RIGHT_START = (-b - length, a)
 WEST_LEFT_START = (-b - length, -a)
 

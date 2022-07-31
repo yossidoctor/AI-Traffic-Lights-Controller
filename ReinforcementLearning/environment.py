@@ -4,7 +4,7 @@ from gym.spaces import Discrete, Box, Tuple
 
 from TrafficSimulator import Window, two_way_intersection
 
-WINDOW_ARGS = {'width': 1000, 'height': 700, 'zoom': 6}  # 1080p 14" laptop monitor with 150% scaling
+WINDOW_ARGS = {'width': 1000, 'height': 700, 'zoom': 5.57}  # 1080p 14" laptop monitor with 150% scaling
 
 
 class TrafficEnvironment(Env):
@@ -55,9 +55,9 @@ class TrafficEnvironment(Env):
             else:
                 step_reward = 3
             if average_ems_wait_time >= self.observation[1]:
-                step_reward = -3
+                step_reward -= 3
             else:
-                step_reward = 6
+                step_reward += 6
 
         return step_reward
 

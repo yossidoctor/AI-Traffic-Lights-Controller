@@ -136,9 +136,9 @@ class Simulation:
                     removed_vehicle = road.vehicles.popleft()
                     self.n_vehicles_on_map -= 1
                     if removed_vehicle.is_ems:
-                        self.standing_ems_times_log.append(removed_vehicle.total_standing_time)
+                        self.standing_ems_times_log.append(removed_vehicle.total_standing_t)
                     else:
-                        self.standing_times_log.append(removed_vehicle.total_standing_time)
+                        self.standing_times_log.append(removed_vehicle.total_standing_t)
 
         self.calculate_average_waiting_time()
 
@@ -152,14 +152,14 @@ class Simulation:
         for vehicle in vehicles:
             if vehicle.is_stopped:
                 if vehicle.is_ems:
-                    current_ems_standing_times.append(self.t - vehicle.last_time_stopped)
+                    current_ems_standing_times.append(self.t - vehicle.last_stop_t)
                 else:
-                    current_standing_times.append(self.t - vehicle.last_time_stopped)
+                    current_standing_times.append(self.t - vehicle.last_stop_t)
             else:
                 if vehicle.is_ems:
-                    current_ems_standing_times.append(vehicle.total_standing_time)
+                    current_ems_standing_times.append(vehicle.total_standing_t)
                 else:
-                    current_standing_times.append(vehicle.total_standing_time)
+                    current_standing_times.append(vehicle.total_standing_t)
         if self.standing_times_log or current_standing_times:
             self.average_wait_time = mean(self.standing_times_log + current_standing_times)
         if self.standing_ems_times_log or current_ems_standing_times:
