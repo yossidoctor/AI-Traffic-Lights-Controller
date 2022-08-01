@@ -10,6 +10,7 @@ class Vehicle:
         self.current_road_index = 0
 
         self.position = position
+        self.is_on_map = False
 
         self.is_ems = is_ems
         self.ems_color = RED
@@ -48,6 +49,7 @@ class Vehicle:
         :param dt: simulation time step
         """
 
+        self.is_on_map = True
         # Update position and velocity
         if self.v + self.a * dt < 0:
             self.x -= 1 / 2 * self.v * self.v / self.a

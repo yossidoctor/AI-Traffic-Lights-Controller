@@ -6,7 +6,7 @@ from pygame import draw
 DRAW_ROAD_IDS = False  # True for debugging, False by default
 DRAW_VEHICLE_IDS = False  # True for debugging, False by default
 FILL_POLYGONS = True  # False for debugging, True by default
-DRAW_GRIDLINES = True  # True for debugging, False by default
+DRAW_GRIDLINES = False  # True for debugging, False by default
 
 EVENTS = {pygame.QUIT,
           pygame.MOUSEBUTTONDOWN,
@@ -17,7 +17,7 @@ EVENTS = {pygame.QUIT,
 
 class Window:
     def __init__(self, width, height, zoom, sim=None):
-        self.sim = sim
+        self.sim: Simulation = sim
         self.width = width
         self.height = height
         self.zoom = zoom
@@ -27,19 +27,13 @@ class Window:
         self.closed = False
 
         # Init display
-        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.screen = None
         self.offset = (0, 0)
         self.mouse_last = (0, 0)
         self.mouse_down = False
-        pygame.display.flip()
-        pygame.display.update()
 
         # Init display font
-        pygame.font.init()
-        self.text_font = pygame.font.SysFont('Lucida Console', 16)
-
-        # Init clock for fixed FPS
-        self.clock = pygame.time.Clock()
+        self.text_font = None
 
         # # Init background music player todo: un-comment
         # pygame.mixer.init()
@@ -47,8 +41,26 @@ class Window:
         # pygame.mixer.music.set_volume(0.3)
         # pygame.mixer.music.play(start=0, fade_ms=8000)
 
-    def update_display(self, episode_data=None):
-        self.draw(episode_data)
+    def update_display(self):
+        if not self.screen:
+            # Init display
+            self.screen = pygame.display.set_mode((self.width, self.height))
+            self.offset = (0, 0)
+            self.mouse_last = (0, 0)
+            self.mouse_down = False
+            pygame.display.flip()
+            pygame.display.update()
+
+            # Init display font
+            pygame.font.init()
+            self.text_font = pygame.font.SysFont('Lucida Console', 16)
+
+            # # Init background music player todo: un-comment
+            # pygame.mixer.init()
+            # pygame.mixer.music.load("slow_ride.mp3")
+            # pygame.mixer.music.set_volume(0.3)
+            # pygame.mixer.music.play(start=0, fade_ms=8000)
+        self.draw()
         pygame.display.update()
 
     def run(self, action, training=False):
@@ -60,21 +72,15 @@ class Window:
             self.sim.update_signals()
 
         for _ in range(200):
-            if self.closed:
-                return
-
-            # Update simulation
             self.sim.update()
-
-            if not training:
-                self.update_display(None)
-                self.clock.tick(60)
-
-            # Detect collisions
             self.sim.detect_collisions()
-
-            # Handle UI events
-            self.handle_window_events()
+            if self.sim.collision_detected or self.sim.completed:
+                return
+            if not training:
+                self.update_display()
+                self.handle_window_events()
+                if self.closed:
+                    return
 
     def handle_window_events(self):
         """
@@ -118,11 +124,7 @@ class Window:
                     self.zoom = 6
                 if event.key == pygame.K_3:
                     # Speed up the simulation when pressing 3
-                    self.sim.dt = min(self.sim.dt * 2, 0.5)  # todo * 2
-                    # self.sim.dt = 0.99999
-                    # 1000 in 70s # 16 a sec
-                    # 5000 in 430s # 11 a sec
-                    # 14000 in 1260
+                    self.sim.dt = min(self.sim.dt * 2, 0.5)
                 if event.key == pygame.K_4:
                     # Slow down the simulation when pressing 4
                     self.sim.dt = max(self.sim.dt / 2, 0.0001)
@@ -282,30 +284,23 @@ class Window:
                                 (1 - a) * road.end[1] + a * road.start[1])
                     self.draw_polygon(position, (1, 3), cos=road.angle_cos, sin=road.angle_sin, color=color)
 
-    def draw_status(self, episode_data=None):
+    def draw_status(self):
         def render(text, color=(0, 0, 0), background=None):
             return self.text_font.render(text, True, color, background)
 
-        time_render = render(f'Time: {pygame.time.get_ticks() / 1000:.0f}s')
         simulation_time_render = render(f'Simulation Time: {self.sim.t:.2f}')
         vehicles_generated_render = render(f'Generated: {self.sim.n_vehicles_generated}')
         vehicles_on_map_render = render(f'On map: {self.sim.n_vehicles_on_map}')
         average_wait_time_render = render(f'Average wait time: {self.sim.average_wait_time:.2f}')
         average_ems_wait_time_render = render(f'Average EMS wait time: {self.sim.average_ems_wait_time:.2f}')
 
-        self.screen.blit(time_render, (10, 10))
         self.screen.blit(simulation_time_render, (10, 35))
         self.screen.blit(vehicles_generated_render, (10, 60))
         self.screen.blit(vehicles_on_map_render, (10, 80))
         self.screen.blit(average_wait_time_render, (10, 100))
         self.screen.blit(average_ems_wait_time_render, (10, 120))
 
-        if episode_data:
-            episode, n_episodes = episode_data
-            episode_data_render = render(f'EPISODE: {episode}/{n_episodes}')
-            self.screen.blit(episode_data_render, (10, 150))
-
-    def draw(self, episode_data=None):
+    def draw(self):
         self.screen.fill((240, 240, 240))
         if DRAW_GRIDLINES:
             # for debugging purposes, todo: remove after completion
@@ -317,4 +312,4 @@ class Window:
         self.draw_roads()
         self.draw_vehicles()
         self.draw_signals()
-        self.draw_status(episode_data)
+        self.draw_status()

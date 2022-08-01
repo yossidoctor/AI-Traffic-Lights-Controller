@@ -1,4 +1,4 @@
-from gym.spaces import Discrete  # TODO: REMOVE
+from gym.spaces import Discrete
 
 from TrafficSimulator import Window, two_way_intersection
 
@@ -9,9 +9,8 @@ class Environment:
     def __init__(self):
         self.generation_limit = 50
         self.window = Window(**WINDOW_ARGS)
-        self.action_space = Discrete(2)
-        # TODO: make it of length len(env.window.sim.traffic_signals)
-        # TODO: remove Discrete action space
+        self.action_space = Discrete(2)  # TODO: remove Discrete action space
+        self.state_offset = 72
 
     def step(self, step_action, training=False):
         # Applies the action and runs a single simulation update cycle.
@@ -23,7 +22,7 @@ class Environment:
         step_reward = self._calculate_reward(new_state)
 
         # Whether a terminal state (as defined under the MDP of the task) is reached.
-        terminated = self.window.sim.n_vehicles_on_map == 0 or self.window.sim.collision_detected
+        terminated = self.window.sim.completed or self.window.sim.collision_detected
 
         # Whether a truncation condition outside the scope of the MDP is satisfied.
         # Ends the episode prematurely before a terminal state is reached.
@@ -60,18 +59,15 @@ class Environment:
         Renders the environment state with modes depending on the output
         """
         self.window.update_display()
-        self.window.clock.tick(60)
 
-    def reset(self):
+    def reset(self, training=False):
         """
         Resets the environment to an initial state, returning the initial state.
         :return: the initial state
         """
-
-        # dt = self.window.sim.dt if self.window.sim else 1 / 60  # for debugging purposes, todo: remove after completion
         self.window.sim = two_way_intersection(self.generation_limit)
-        # self.window.sim.dt = dt  # for debugging purposes, todo: remove after completion
-        self.window.update_display()
+        if not training:
+            self.render()
         init_state = tuple()
         return init_state
 

@@ -21,7 +21,7 @@ if __name__ == '__main__':
     env = Environment()
     n_episodes = 10
     n_completed_episodes = 0
-    total_scores, total_collisions = 0, 0
+    total_scores = 0
     total_civ_wait, total_ems_wait = 0, 0
 
     for episode in range(1, n_episodes + 1):
@@ -45,13 +45,11 @@ if __name__ == '__main__':
               f'CIV: {env.window.sim.average_wait_time:.2f} EMS: {env.window.sim.average_ems_wait_time:.2f}')
 
         total_scores += score
-        total_collisions += env.window.sim.collision_detected  # TODO: ENCAPSULATE
         total_civ_wait += env.window.sim.average_wait_time
         total_ems_wait += env.window.sim.average_ems_wait_time
         n_completed_episodes += 1
 
     print(f"Results after {n_completed_episodes} episodes:")
     print(f"Average score per episode: {total_scores / n_completed_episodes:.2f}")
-    print(f"Average collisions per episode: {total_collisions / n_completed_episodes:.2f}")
     print(f"Average civ wait time per episode: {total_civ_wait / n_completed_episodes:.2f}")
     print(f"Average ems wait time per episode: {total_ems_wait / n_completed_episodes:.2f}")

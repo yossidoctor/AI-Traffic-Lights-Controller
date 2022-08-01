@@ -21,6 +21,7 @@ class Simulation:
         self._intersections = {}  # {Road index: List of all intersecting roads' indexes}
 
         # Simulation stats
+        self.completed = False
         self.collision_detected = False  # True is a terminal state (as defined under the MDP of the task)
         self.collisions = 0
         self.n_vehicles_generated = 0
@@ -57,7 +58,8 @@ class Simulation:
         """
         if not roads:
             roads = self.non_empty_roads()
-        return list(chain.from_iterable([self.roads[road].vehicles for road in roads]))
+        vehicles = list(chain.from_iterable([self.roads[road].vehicles for road in roads]))
+        return list(filter(lambda vehicle: vehicle.is_on_map, vehicles))
 
     def detect_collisions(self) -> None:
         """Detects collisions between roads in the intersections"""
@@ -94,8 +96,7 @@ class Simulation:
         self.traffic_signals.append(sig)
 
     def update_signals(self):
-        for signal in self.traffic_signals:
-            signal.update(self.t)
+        self.traffic_signals[0].update()
 
     # def update_signals(self, actions_list):
     # for i, signal in enumerate(self.traffic_signals):
@@ -158,6 +159,8 @@ class Simulation:
                         self.standing_times_log.append(removed_vehicle.total_standing_t)
 
         self.calculate_average_waiting_time()
+
+        self.completed = self.n_vehicles_generated == self.generation_limit and not self.n_vehicles_on_map
 
         # Increment time
         self.t += self.dt

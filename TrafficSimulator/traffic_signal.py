@@ -17,7 +17,7 @@ class TrafficSignal:
     def current_cycle(self):
         return self.cycle[self.current_cycle_index]
 
-    def update(self, t):
+    def update(self):
         if self.current_cycle_index:
             self.current_cycle_index = 0
         else:
