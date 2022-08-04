@@ -12,7 +12,7 @@ class QLearningAgent:
     def get_qvalue(self, state, action):
         """
           Returns Q(state,action)
-          Should return 0.0 if we never seen
+          Should return 0.0 if we have never seen
           a state or (state,action) tuple
         """
         if (state, action) not in self.q_values:

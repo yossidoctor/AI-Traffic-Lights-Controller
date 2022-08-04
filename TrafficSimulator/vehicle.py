@@ -1,55 +1,41 @@
-import numpy as np
+from typing import List, Tuple
 
-RED = (255, 51, 51)
-BLUE = (51, 51, 255)
+import numpy as np
 
 
 class Vehicle:
-    def __init__(self, path, position, is_ems):
-        self.path = path
-        self.current_road_index = 0
-
-        self.position = position
-        self.is_on_map = False
-
-        self.is_ems = is_ems
-        self.ems_color = RED
-
-        self.is_stopped = False
-        self.last_stop_t = None
-        self.last_ems_update_t = 0
-        self.total_standing_t = 0
-
-        self.generation_index = None  # for debugging purposes, initiated at vehicle generator
-
+    def __init__(self, first_road, path: List[int]):
         self.length = 4
         self.width = 2
-
-        self.s0 = 5
+        self.s0 = 4
         self.T = 1
         self.v_max = 16.6
         self.a_max = 1.44
         self.b_max = 4.61
         self.sqrt_ab = 2 * np.sqrt(self.a_max * self.b_max)
         self._v_max = self.v_max
+
         self.x = 0
         self.v = self.v_max
         self.a = 0
 
-    def update_ems_color(self):
-        if self.ems_color == RED:
-            self.ems_color = BLUE
-        else:
-            self.ems_color = RED
+        self.is_stopped = False
+        self._waiting_time = 0
+        self.last_time_stopped = None
 
-    def update(self, lead, dt):
-        """
-        Updates the vehicle position, velocity and acceleration
-        :param lead: leading vehicle
-        :param dt: simulation time step
-        """
+        self.path: List[int] = path
+        self.position: Tuple = first_road.start
+        self.current_road_index = 0
 
-        self.is_on_map = True
+        # For debugging purposes, todo comment-out before project submission
+        self.generation_index = 0
+
+    def get_waiting_time(self, sim_t):
+        if self.is_stopped:
+            return self._waiting_time + (sim_t - self.last_time_stopped)
+        return self._waiting_time
+
+    def update(self, lead, dt, road):
         # Update position and velocity
         if self.v + self.a * dt < 0:
             self.x -= 1 / 2 * self.v * self.v / self.a
@@ -71,16 +57,22 @@ class Vehicle:
         if self.is_stopped:
             self.a = -self.b_max * self.v / self.v_max
 
+        # Update position
+        sin, cos = road.angle_sin, road.angle_cos
+        x = road.start[0] + cos * self.x
+        y = road.start[1] + sin * self.x
+        self.position = x, y
+
     def stop(self, t):
-        self.last_stop_t = t
-        self.is_stopped = True
+        if not self.is_stopped:
+            self.last_time_stopped = t
+            self.is_stopped = True
 
     def unstop(self, t):
         if self.is_stopped:
-            standing_time = t - self.last_stop_t
-            self.total_standing_t += standing_time
-            self.last_stop_t = None
-        self.is_stopped = False
+            self._waiting_time += (t - self.last_time_stopped)
+            self.last_time_stopped = None
+            self.is_stopped = False
 
     def slow(self, v):
         self.v_max = v

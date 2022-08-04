@@ -1,6 +1,5 @@
 class TrafficSignal:
-    def __init__(self, road_groups, roads, cycle, slow_distance, slow_factor, stop_distance):
-        self.road_groups = road_groups
+    def __init__(self, roads, cycle, slow_distance, slow_factor, stop_distance):
         self.roads = roads
         self.cycle = cycle
         self.slow_distance = slow_distance
@@ -8,9 +7,8 @@ class TrafficSignal:
         self.stop_distance = stop_distance
         self.current_cycle_index = 0
         self.last_update_t = 0
-
-        for i, roads in enumerate(self.roads):
-            for road in roads:
+        for i in range(len(self.roads)):
+            for road in self.roads[i]:
                 road.set_traffic_signal(self, i)
 
     @property
@@ -18,7 +16,7 @@ class TrafficSignal:
         return self.cycle[self.current_cycle_index]
 
     def update(self):
-        if self.current_cycle_index:
-            self.current_cycle_index = 0
-        else:
-            self.current_cycle_index = 1
+        self.current_cycle_index = 1 - self.current_cycle_index
+        # cycle_length = 30
+        # k = (sim.t // cycle_length) % 2
+        # self.current_cycle_index = int(k)

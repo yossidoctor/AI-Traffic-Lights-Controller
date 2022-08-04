@@ -1,43 +1,40 @@
-from random import randint
+from typing import List, Dict
 
-from .vehicle import Vehicle
+from numpy.random import randint
+
+from TrafficSimulator import Vehicle, Road
 
 
 class VehicleGenerator:
-    def __init__(self, sim, vehicle_rate, paths_dict, ems):
-        self._sim = sim
-        # todo: make _vehicle_rate adaptive, allow to change mid simulation -
-        #  to simulate real-life conditions, with a randomness factor (line in _generate_vehicle)
-        self.is_ems = ems
-        self._vehicle_rate = vehicle_rate
-        self._paths_dict = paths_dict  # {weight: path}
-        self._last_gen_t = 0
+    def __init__(self, sim, vehicle_rate, paths_dict):
+        self.sim = sim
+        self.vehicle_rate = vehicle_rate
+        self.paths_dict: Dict[int, List[int]] = paths_dict
+        self.last_added_time = 0
 
-    def _generate_vehicle(self):
-        """Generates a random vehicle
-        @rtype: Vehicle
-        """
-        total = sum(weight for weight, path in self._paths_dict)
+    def generate_vehicle(self):
+        """Returns a random vehicle from self.vehicles with random proportions"""
+        total = sum(weight for weight, path in self.paths_dict)
         r = randint(0, total)
-        for (weight, path) in self._paths_dict:
+        for (weight, path) in self.paths_dict:
             r -= weight
             if r <= 0:
-                first_road = self._sim.roads[path[0]]
-                return Vehicle(path, first_road.start, self.is_ems)
+                first_road = self.sim.roads[path[0]]
+                return Vehicle(first_road, path)
 
     def update(self):
-        """Generates a vehicle if the generation conditions are satisfied
-        @rtype: bool
-        """
+        """Generates a vehicle if the generation conditions are satisfied"""
         # If there's no vehicles on the map, or if the time elapsed after last
         # generation is greater than the vehicle rate, generate a vehicle
-        if not self._sim.n_vehicles_generated or self._sim.t - self._last_gen_t >= 60 / self._vehicle_rate:
-            vehicle = self._generate_vehicle()
-            road = self._sim.roads[vehicle.path[0]]
+        time_elapsed = self.sim.t - self.last_added_time >= 60 / self.vehicle_rate
+        if not self.sim.n_vehicles_generated or time_elapsed:
+            vehicle: Vehicle = self.generate_vehicle()
+            road: Road = self.sim.roads[vehicle.path[0]]
             # If the road is empty, or there's enough space for the generated vehicle, add it
             if not road.vehicles or road.vehicles[-1].x > vehicle.s0 + vehicle.length:
-                vehicle.generation_index = self._sim.n_vehicles_generated  # for debugging purposes
+                # For debugging purposes, todo comment-out before project submission
+                vehicle.generation_index = self.sim.n_vehicles_generated
                 road.vehicles.append(vehicle)
-                self._last_gen_t = self._sim.t
+                self.last_added_time = self.sim.t
                 return True
         return False

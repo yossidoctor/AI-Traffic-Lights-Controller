@@ -2,7 +2,7 @@ from ReinforcementLearning import Environment
 
 
 def fixed_cycle_action(sim):
-    time_elapsed = sim.t - sim.traffic_signals[0].last_update_t >= 10
+    time_elapsed = sim.t - sim.traffic_signals[0].last_update_t >= 20
     if time_elapsed:
         sim.traffic_signals[0].last_update_t = sim.t
     return time_elapsed
@@ -16,40 +16,32 @@ def fixed_cycle_action(sim):
     # return actions
 
 
-if __name__ == '__main__':
-    # TODO: ADD DOCS
+def fixed_cycle_simulation(n_episodes):
     env = Environment()
-    n_episodes = 10
-    n_completed_episodes = 0
-    total_scores = 0
-    total_civ_wait, total_ems_wait = 0, 0
+    total_scores, total_wait_time = 0, 0
 
     for episode in range(1, n_episodes + 1):
         state = env.reset()
-        done = False
         score = 0
-        truncated = False
+        done = False
 
         while not done:
             env.render()
             action = fixed_cycle_action(env.window.sim)
             n_state, reward, done, truncated = env.step(action)
             if truncated:
-                break
+                exit()
             score += reward
 
-        if truncated:
-            break
-
-        print(f'Episode:{episode} Score:{score} '
-              f'CIV: {env.window.sim.average_wait_time:.2f} EMS: {env.window.sim.average_ems_wait_time:.2f}')
+        print(f'Episode {episode} - Score:{score}')
 
         total_scores += score
-        total_civ_wait += env.window.sim.average_wait_time
-        total_ems_wait += env.window.sim.average_ems_wait_time
-        n_completed_episodes += 1
+        total_wait_time += env.window.sim.get_average_wait_time()
 
-    print(f"Results after {n_completed_episodes} episodes:")
-    print(f"Average score per episode: {total_scores / n_completed_episodes:.2f}")
-    print(f"Average civ wait time per episode: {total_civ_wait / n_completed_episodes:.2f}")
-    print(f"Average ems wait time per episode: {total_ems_wait / n_completed_episodes:.2f}")
+    print(f"Results after {n_episodes} episodes:")
+    print(f"Average score per episode: {total_scores / n_episodes:.2f}")
+    print(f"Average wait time per episode: {total_wait_time / n_episodes:.2f}")
+
+
+if __name__ == '__main__':
+    fixed_cycle_simulation(n_episodes=10)
