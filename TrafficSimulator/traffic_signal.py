@@ -1,5 +1,6 @@
 class TrafficSignal:
     def __init__(self, road_groups, roads, cycle, slow_distance, slow_factor, stop_distance):
+        # todo: seems like we don't use most of these
         self.road_groups = road_groups
         self.roads = roads
         self.cycle = cycle
@@ -18,7 +19,4 @@ class TrafficSignal:
         return self.cycle[self.current_cycle_index]
 
     def update(self):
-        if self.current_cycle_index:
-            self.current_cycle_index = 0
-        else:
-            self.current_cycle_index = 1
+        self.current_cycle_index = 1 - self.current_cycle_index  # todo: changed to this
