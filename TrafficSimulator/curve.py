@@ -24,20 +24,16 @@ TURN_LEFT = 0
 TURN_RIGHT = 1
 
 
-def turn_road(start, end, turn_direction, resolution=15) -> list:
+def turn_road(start, end, turn_direction, resolution=15):
     # Get control point
     x = min(start[0], end[0])
     y = min(start[1], end[1])
 
     if turn_direction == TURN_LEFT:
-        control = (
-            x - y + start[1],
-            y - x + end[0]
-        )
+        control = (x - y + start[1],
+                   y - x + end[0])
     else:
-        control = (
-            x - y + end[1],
-            y - x + start[0]
-        )
+        control = (x - y + end[1],
+                   y - x + start[0])
 
     return curve_road(start, end, control, resolution=resolution)
