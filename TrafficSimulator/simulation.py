@@ -46,7 +46,7 @@ class Simulation:
 
     def detect_collisions(self) -> None:
         """Detects collisions between roads in the intersections"""
-        radius = 15
+        radius = 2
         for i, intersecting_indexes in self.intersections.items():
             vehicles = self.roads[i].vehicles
             intersecting_vehicles = []

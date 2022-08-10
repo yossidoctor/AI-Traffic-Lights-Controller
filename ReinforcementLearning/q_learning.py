@@ -41,8 +41,8 @@ def train_agent(q_agent, env, path, n_episodes):
 
 
 def validate_agent(q_agent, env, n_episodes):
-    total_scores, total_wait_time = 0, 0
-    for n_episode in range(n_episodes):
+    total_scores, total_wait_time, total_collisions = 0, 0, 0
+    for n_episode in range(1, n_episodes + 1):
         state = env.reset()
         score = 0
         done = False
@@ -51,24 +51,28 @@ def validate_agent(q_agent, env, n_episodes):
             # env.render()
             action = q_agent.get_action(state)
             next_state, reward, done, truncated = env.step(action)
+            if env.window.sim.collision_detected:
+                total_collisions += 1
             if truncated:
                 return
             state = next_state
             score += reward
 
+        print(f"Episode {n_episode}")
         total_scores += score
         total_wait_time += env.window.sim.get_average_wait_time()
 
     print(f"Results after {n_episodes} episodes:")
     print(f"Average score per episode: {total_scores / n_episodes}")
-    print(f"Average wait time per episode: {total_wait_time / n_episodes}")
+    print(f"Average wait time per episode: {total_wait_time / n_episodes:.2f}")
+    print(f"Average collisions per episode: {total_collisions / n_episodes:.2f}")
 
 
 if __name__ == '__main__':
     env = Environment()
     actions = len(env.action_space)
     q_agent = QLearningAgent(alpha=alpha, epsilon=epsilon, discount=discount, actions=actions)
-    n_episodes = 5000
+    n_episodes = 10000
     # train_agent(q_agent, env, f'Traffic_q_values_{n_episodes}.txt', n_episodes=n_episodes)
     q_agent.q_values = eval(get_q_values(f'Traffic_q_values_{n_episodes}.txt'))
-    validate_agent(q_agent, env, n_episodes=10)
+    validate_agent(q_agent, env, n_episodes=100)
