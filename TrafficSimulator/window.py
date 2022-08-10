@@ -7,15 +7,17 @@ from TrafficSimulator import Simulation
 # For debugging purposes, todo comment-out before project submission
 DRAW_VEHICLE_IDS = False
 DRAW_ROAD_IDS = False
-DRAW_GRIDLINES = False
-NO_FILL_POLYGONS = False
+# DRAW_GRIDLINES = True
+FILL_POLYGONS = False
 
 
 class Window:
     def __init__(self, sim: Simulation = None):
         self.sim: Simulation = sim
-        self.width = 1400
-        self.height = 900
+        # self.width = 1400
+        # self.height = 900
+        self.width = 900
+        self.height = 700
 
         self.fps = 60
         self.zoom = 5
@@ -35,6 +37,8 @@ class Window:
 
         pygame.font.init()
         self._text_font = pygame.font.SysFont('Lucida Console', 16)
+
+        self.update_display()
 
     def update_display(self):
         if self.screen:
@@ -70,7 +74,7 @@ class Window:
             if self.closed or self.sim.completed:
                 return
 
-        self.loop(100)
+        self.loop(200)
 
     def handle_window_events(self):
         """
@@ -110,7 +114,7 @@ class Window:
                     self.zoom = 23
                 if event.key == pygame.K_2:
                     # Zoom out of the intersection when pressing 2
-                    self.zoom = 6
+                    self.zoom = 5
                 # if event.key == pygame.K_3:
                 #     # Speed up the simulation when pressing 3
                 #     self.sim.dt = min(self.sim.dt * 2, 0.5)
@@ -151,11 +155,9 @@ class Window:
             points = self.convert([vertex(*e) for e in [(-1, -1), (-1, 1), (1, 1), (1, -1)]])
         else:
             points = self.convert([vertex(*e) for e in [(0, -1), (0, 1), (2, 1), (2, -1)]])
-
         # draw.polygon(self.screen, color, points)
-
         # For debugging purposes, todo comment-out before project submission
-        width = 0 if NO_FILL_POLYGONS else 2
+        width = 0 if FILL_POLYGONS else 2
         x1, x2 = points[0][0], points[2][0]
         y1, y2 = points[0][1], points[2][1]
         screen_x = x1 + (x2 - x1) / 2
@@ -179,26 +181,26 @@ class Window:
                          color=color,
                          centered=False)
 
-    def draw_axes(self, color=(100, 100, 100)):
-        x_start, y_start = self.inverse_convert(0, 0)
-        x_end, y_end = self.inverse_convert(self.width, self.height)
-        draw.line(self.screen, self.convert((0, y_start)), self.convert((0, y_end)), color)
-        draw.line(self.screen, self.convert((x_start, 0)), self.convert((x_end, 0)), color)
-
-    def draw_grid(self, unit=50, color=(150, 150, 150)):
-        x_start, y_start = self.inverse_convert(0, 0)
-        x_end, y_end = self.inverse_convert(self.width, self.height)
-        n_x = int(x_start / unit)
-        n_y = int(y_start / unit)
-        m_x = int(x_end / unit) + 1
-        m_y = int(y_end / unit) + 1
-        for i in range(n_x, m_x):
-            draw.line(self.screen, self.convert((unit * i, y_start)), self.convert((unit * i, y_end)), color)
-        for i in range(n_y, m_y):
-            draw.line(self.screen, self.convert((x_start, unit * i)), self.convert((x_end, unit * i)), color)
+    # def draw_axes(self, color=(100, 100, 100)):
+    #     x_start, y_start = self.inverse_convert(0, 0)
+    #     x_end, y_end = self.inverse_convert(self.width, self.height)
+    #     draw.line(self.screen, self.convert((0, y_start)), self.convert((0, y_end)), color)
+    #     draw.line(self.screen, self.convert((x_start, 0)), self.convert((x_end, 0)), color)
+    #
+    # def draw_grid(self, unit=50, color=(150, 150, 150)):
+    #     x_start, y_start = self.inverse_convert(0, 0)
+    #     x_end, y_end = self.inverse_convert(self.width, self.height)
+    #     n_x = int(x_start / unit)
+    #     n_y = int(y_start / unit)
+    #     m_x = int(x_end / unit) + 1
+    #     m_y = int(y_end / unit) + 1
+    #     for i in range(n_x, m_x):
+    #         draw.line(self.screen, self.convert((unit * i, y_start)), self.convert((unit * i, y_end)), color)
+    #     for i in range(n_y, m_y):
+    #         draw.line(self.screen, self.convert((x_start, unit * i)), self.convert((x_end, unit * i)), color)
 
     def draw_roads(self):
-        for j, road in enumerate(self.sim.roads):
+        for road in self.sim.roads:
             # Draw road background
             screen_x, screen_y = self.rotated_box(
                 road.start,
@@ -211,7 +213,7 @@ class Window:
 
             if DRAW_ROAD_IDS:
                 # For debugging purposes, todo comment-out before project submission
-                text_road_index = self._text_font.render(f'{j}', True, (0, 0, 0))
+                text_road_index = self._text_font.render(f'{road.index}', True, (0, 0, 0))
                 self.screen.blit(text_road_index, (screen_x, screen_y))
 
             # Draw road arrow
@@ -271,12 +273,12 @@ class Window:
         # Fill background
         self.screen.fill((250, 250, 250))
 
-        # Major and minor grid and axes
-        if DRAW_GRIDLINES:
-            # For debugging purposes, todo comment-out before project submission
-            self.draw_grid(10, (220, 220, 220))
-            self.draw_grid(100, (200, 200, 200))
-            self.draw_axes()
+        # # Major and minor grid and axes
+        # if DRAW_GRIDLINES:
+        #     # For debugging purposes, todo comment-out before project submission
+        #     self.draw_grid(10, (220, 220, 220))
+        #     self.draw_grid(100, (200, 200, 200))
+        #     self.draw_axes()
 
         self.draw_roads()
         self.draw_vehicles()

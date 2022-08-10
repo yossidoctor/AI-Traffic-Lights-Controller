@@ -8,29 +8,6 @@ length = 50  # Road length
 offset = 25  # Intersection offset from the center
 
 # Nodes
-# WEST_RIGHT_START = (-b - length - offset, a)
-# WEST_LEFT_START = (-b - length - offset, -a)
-#
-# SOUTH_RIGHT_START = (a - offset, b + length)
-# SOUTH_LEFT_START = (-a - offset, b + length)
-#
-# EAST_RIGHT_START = (b, -a)
-# EAST_LEFT_START = (b, a)
-#
-# NORTH_RIGHT_START = (-a - offset, -b - length)
-# NORTH_LEFT_START = (a - offset, -b - length)
-#
-# WEST_RIGHT = (-b - offset, a)
-# WEST_LEFT = (-b - offset, -a)
-#
-# SOUTH_RIGHT = (a - offset, b)
-# SOUTH_LEFT = (-a - offset, b)
-#
-# EAST_RIGHT = (b - offset, -a)
-# EAST_LEFT = (b - offset, a)
-#
-# NORTH_RIGHT = (-a - offset, -b)
-# NORTH_LEFT = (a - offset, -b)
 WEST_RIGHT_START = (-b - length, a)
 WEST_LEFT_START = (-b - length, -a)
 
@@ -118,10 +95,10 @@ def turn(t): return range(t, t + n)
 
 # Vehicle generator
 VEHICLE_RATE = 35
-PATHS_DICT = [
+PATHS = [
     [3, [0, 8, 6]],  # WEST STRAIGHT EAST
     [1, [0, *turn(12), 5]],  # WEST RIGHT SOUTH
-    # [1, [0, *turn(12 + n), 7]], # WEST LEFT NORTH
+    # [1, [0, *turn(12 + n), 7]],  # WEST LEFT NORTH
 
     [3, [1, 9, 7]],  # SOUTH STRAIGHT NORTH
     [1, [1, *turn(12 + 2 * n), 6]],  # SOUTH RIGHT EAST
@@ -136,19 +113,15 @@ PATHS_DICT = [
     # [1, [3, *turn(12 + 7 * n), 6]]  # NORTH LEFT EAST
 ]
 
-
-def short_turn(t): return range(t + 2, t + n - 2)
-
-
 # Intersections
-t12 = short_turn(12)
-t27 = short_turn(27)
-t42 = short_turn(42)
-t57 = short_turn(56)
-t72 = short_turn(72)
-t87 = short_turn(87)
-t102 = short_turn(102)
-t117 = short_turn(117)
+t12 = turn(12)
+t27 = turn(27)
+t42 = turn(42)
+t57 = turn(56)
+t72 = turn(72)
+t87 = turn(87)
+t102 = turn(102)
+t117 = turn(117)
 d1 = {8: [9, 11, *t42, *t57, *t87, *t117]}
 d2 = {9: [10, *t12, *t27, *t72, *t87, *t117]}
 d3 = {10: [11, *t27, *t57, *t102, *t117]}
@@ -182,7 +155,7 @@ STOP_DISTANCE = 15
 def two_way_intersection(max_gen=None):
     sim = Simulation(max_gen)
     sim.create_roads(ROADS)
-    sim.create_gen(VEHICLE_RATE, PATHS_DICT)
+    sim.create_gen(VEHICLE_RATE, PATHS)
     sim.create_signal(SIGNALS, CYCLE, SLOW_DISTANCE, SLOW_FACTOR, STOP_DISTANCE)
     sim.create_intersections(INTERSECTIONS_DICT)
     return sim

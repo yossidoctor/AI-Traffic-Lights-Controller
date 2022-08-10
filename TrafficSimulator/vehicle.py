@@ -4,38 +4,48 @@ import numpy as np
 
 
 class Vehicle:
-    def __init__(self, first_road, path: List[int]):
+    def __init__(self, path: List[int]):
+        self.index = 0
         self.length = 4
         self.width = 2
+
         self.s0 = 4
         self.T = 1
-        self.v_max = 16.6
-        self.a_max = 1.44
-        self.b_max = 4.61
+        self.v_max = 16.6  # Max velocity
+        self.a_max = 1.44  # Max positive acceleration
+        self.b_max = 4.61  # Max negative acceleration
         self.sqrt_ab = 2 * np.sqrt(self.a_max * self.b_max)
         self._v_max = self.v_max
 
-        self.x = 0
-        self.v = self.v_max
-        self.a = 0
+        self.v = self.v_max  # Velocity
+        self.a = 0  # Acceleration
+        self.x = 0  # Position, relative to its current roadM
 
         self.is_stopped = False
-        self._waiting_time = 0
-        self.last_time_stopped = None
+        self._last_time_stopped = None
+        self._total_waiting_time = 0
 
-        self.path: List[int] = path
-        self.position: Tuple = first_road.start
+        self.path: List[int] = path  # Road indexes
         self.current_road_index = 0
 
-        # For debugging purposes, todo comment-out before project submission
-        self.generation_index = 0
+        # Used for collision detection, initial value set in vehicle.update() upon adding it to the map
+        self.position: Tuple = (None, None)
 
-    def get_waiting_time(self, sim_t):
+    def __str__(self):
+        return f'{self.index}'
+
+    def get_total_waiting_time(self, sim_t):
         if self.is_stopped:
-            return self._waiting_time + (sim_t - self.last_time_stopped)
-        return self._waiting_time
+            return self._total_waiting_time + (sim_t - self._last_time_stopped)
+        return self._total_waiting_time
 
     def update(self, lead, dt, road):
+        """
+        Updates the vehicle position (relative to the road, and general map position), velocity, and  acceleration
+        :param lead: vehicle
+        :param dt: simulation time step
+        :param road: road of the vehicle
+        """
         # Update position and velocity
         if self.v + self.a * dt < 0:
             self.x -= 1 / 2 * self.v * self.v / self.a
@@ -65,13 +75,13 @@ class Vehicle:
 
     def stop(self, t):
         if not self.is_stopped:
-            self.last_time_stopped = t
+            self._last_time_stopped = t
             self.is_stopped = True
 
     def unstop(self, t):
         if self.is_stopped:
-            self._waiting_time += (t - self.last_time_stopped)
-            self.last_time_stopped = None
+            self._total_waiting_time += (t - self._last_time_stopped)
+            self._last_time_stopped = None
             self.is_stopped = False
 
     def slow(self, v):

@@ -23,11 +23,16 @@ class Simulation:
         self._waiting_time_log = []  # for vehicles that completed the journey
 
     @property
-    def completed(self):
-        return self._max_gen and (self.n_vehicles_generated == self._max_gen) and (not self.n_vehicles_on_map)
+    def completed(self) -> bool:
+        """
+        Whether a terminal state (as defined under the MDP of the task) is reached.
+        """
+        a = self.collision_detected
+        b = self._max_gen and (self.n_vehicles_generated == self._max_gen) and (not self.n_vehicles_on_map)
+        return a or b
 
     @property
-    def non_empty_roads(self):
+    def non_empty_roads(self) -> List[Road]:
         return list(filter(lambda road: road.vehicles, self.roads))
 
     @property
@@ -93,7 +98,11 @@ class Simulation:
         for signal in self.traffic_signals:
             signal.update()
 
-    def update(self):
+    def update(self) -> None:
+        """
+        Updates the non-empty roads and the vehicle generators, check roads for out of bounds vehicle,
+        detects collisions and increments time
+        """
         # Update every road
         for road in self.non_empty_roads:
             road.update(self.dt, self.t)

@@ -49,7 +49,7 @@ class Road:
                 lead = self.vehicles[i - 1]
                 self.vehicles[i].update(lead, dt, self)
 
-            lead = self.vehicles[0]
+            lead: Vehicle = self.vehicles[0]
             # Check for traffic signal
             if self.traffic_signal_state:
                 # If traffic signal is green or doesn't exist, let vehicles pass

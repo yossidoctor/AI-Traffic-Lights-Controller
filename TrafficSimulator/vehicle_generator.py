@@ -6,7 +6,7 @@ from TrafficSimulator import Vehicle, Road
 
 
 class VehicleGenerator:
-    def __init__(self, vehicle_rate, paths: List[List], inbound_roads: Dict[int: Road]):
+    def __init__(self, vehicle_rate, paths: List[List], inbound_roads: Dict[int, Road]):
         self._inbound_roads: Dict[int: Road] = inbound_roads
         self._vehicle_rate = vehicle_rate
         self._paths: List[List] = paths
@@ -31,7 +31,7 @@ class VehicleGenerator:
             road: Road = self._inbound_roads[vehicle.path[0]]
             # If the road is empty, or there's enough space for the generated vehicle, add it
             if not road.vehicles or road.vehicles[-1].x > vehicle.s0 + vehicle.length:
-                vehicle.index = n_vehicles_generated  # For debugging purposes, todo comment-out before project submission
+                vehicle.index = n_vehicles_generated
                 vehicle.position = road.start
                 road.vehicles.append(vehicle)
                 self._last_added_time = sim_t
