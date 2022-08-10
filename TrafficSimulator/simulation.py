@@ -1,6 +1,6 @@
 from copy import deepcopy
 from statistics import mean
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from scipy.spatial import distance
 
@@ -8,9 +8,8 @@ from TrafficSimulator import Road, VehicleGenerator, TrafficSignal
 
 
 class Simulation:
-    def __init__(self, max_gen=0):
+    def __init__(self, max_gen=None):
         self.t = 0.0  # Time keeping
-        self.frame_count = 0  # Frame count keeping
         self.dt = 1 / 60  # Simulation time step
         self.roads: List[Road] = []  # Array to store roads
         self.generators: List[VehicleGenerator] = []
@@ -18,11 +17,18 @@ class Simulation:
 
         self._intersections: Dict[int, List[int]] = {}  # {Road index: List of all intersecting roads' indexes}
         self.collision_detected = False
-        self.max_gen = max_gen  # Limits the amount of cars generated in a single simulation
+        self._max_gen = max_gen  # Limits the amount of cars generated in a single simulation
         self.n_vehicles_generated = 0
         self.n_vehicles_on_map = 0
-        self.completed = False
-        self._waiting_time_log = []  # Of vehicles that completed the journey
+        self._waiting_time_log = []  # for vehicles that completed the journey
+
+    @property
+    def completed(self):
+        return self._max_gen and (self.n_vehicles_generated == self._max_gen) and (not self.n_vehicles_on_map)
+
+    @property
+    def non_empty_roads(self):
+        return list(filter(lambda road: road.vehicles, self.roads))
 
     @property
     def intersections(self) -> Dict[int, List[int]]:
@@ -62,12 +68,12 @@ class Simulation:
         self._intersections = self._intersections | intersections_dict
 
     def create_road(self, start, end):
-        road = Road(start, end)
+        road = Road(start, end, index=len(self.roads))
         self.roads.append(road)
         return road
 
-    def create_roads(self, road_list):
-        for road in road_list:
+    def create_roads(self, roads: List[Tuple]):
+        for road in roads:
             self.create_road(*road)
 
     def create_gen(self, vehicle_rate, paths_dict):
@@ -87,35 +93,31 @@ class Simulation:
 
     def update(self):
         # Update every road
-        for road in self.roads:
+        for road in self.non_empty_roads:
             road.update(self.dt, self.t)
 
         # Add vehicles
         for gen in self.generators:
-            if 0 < self.n_vehicles_generated == self.max_gen:
+            if self._max_gen and self.n_vehicles_generated == self._max_gen:
                 break
-            generated = gen.update()
+            generated = gen.update(self.t, self.n_vehicles_generated)
             self.n_vehicles_generated += generated
             self.n_vehicles_on_map += generated
 
         # Check roads for out of bounds vehicle
-        for road in self.roads:
-            # If road has no vehicles, continue
-            if len(road.vehicles) == 0:
-                continue
-            # If not
-            vehicle = road.vehicles[0]
+        for road in self.non_empty_roads:
+            lead = road.vehicles[0]
             # If first vehicle is out of road bounds
-            if vehicle.x >= road.length:
+            if lead.x >= road.length:
                 # If vehicle has a next road
-                if vehicle.current_road_index + 1 < len(vehicle.path):
+                if lead.current_road_index + 1 < len(lead.path):
                     # Update current road to next road
-                    vehicle.current_road_index += 1
+                    lead.current_road_index += 1
                     # Create a copy and reset some vehicle properties
-                    new_vehicle = deepcopy(vehicle)
+                    new_vehicle = deepcopy(lead)
                     new_vehicle.x = 0
                     # Add it to the next road
-                    next_road_index = vehicle.path[vehicle.current_road_index]
+                    next_road_index = lead.path[lead.current_road_index]
                     self.roads[next_road_index].vehicles.append(new_vehicle)
                     # Remove it from its road
                     road.vehicles.popleft()
@@ -124,10 +126,9 @@ class Simulation:
                     removed_vehicle = road.vehicles.popleft()
                     self.n_vehicles_on_map -= 1
                     # Update the log
-                    self._waiting_time_log.append(removed_vehicle.get_waiting_time(self.t))
+                    self._waiting_time_log.append(removed_vehicle.get_total_waiting_time(self.t))
+
+        self.detect_collisions()
 
         # Increment time
         self.t += self.dt
-        self.frame_count += 1
-
-        self.completed = (self.n_vehicles_generated == self.max_gen) and (not self.n_vehicles_on_map)

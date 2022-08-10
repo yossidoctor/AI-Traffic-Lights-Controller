@@ -7,9 +7,10 @@ from TrafficSimulator.vehicle import Vehicle
 
 
 class Road:
-    def __init__(self, start, end):
+    def __init__(self, start, end, index):
         self.start = start
         self.end = end
+        self.index = index
 
         self.vehicles: Deque[Vehicle] = deque()
 
@@ -26,6 +27,9 @@ class Road:
         self.traffic_signal = signal
         self.traffic_signal_group = group
         self.has_traffic_signal = True
+
+    def __str__(self):
+        return f'{self.index}'
 
     @property
     def traffic_signal_state(self):
@@ -45,19 +49,19 @@ class Road:
                 lead = self.vehicles[i - 1]
                 self.vehicles[i].update(lead, dt, self)
 
+            lead = self.vehicles[0]
             # Check for traffic signal
             if self.traffic_signal_state:
-                # If traffic signal is green or doesn't exist
-                # Then let vehicles pass
-                self.vehicles[0].unstop(sim_t)
+                # If traffic signal is green or doesn't exist, let vehicles pass
+                lead.unstop(sim_t)
                 for vehicle in self.vehicles:
                     vehicle.unslow()
             else:
                 # If traffic signal is red
-                if self.vehicles[0].x >= self.length - self.traffic_signal.slow_distance:
+                if lead.x >= self.length - self.traffic_signal.slow_distance:
                     # Slow vehicles in slowing zone
-                    self.vehicles[0].slow(self.traffic_signal.slow_factor * self.vehicles[0]._v_max)
-                if self.length - self.traffic_signal.stop_distance <= \
-                        self.vehicles[0].x <= self.length - self.traffic_signal.stop_distance / 2:
+                    lead.slow(self.traffic_signal.slow_factor * lead._v_max)
+                if self.length - self.traffic_signal.stop_distance <= lead.x <= \
+                        self.length - self.traffic_signal.stop_distance / 2:
                     # Stop vehicles in the stop zone
-                    self.vehicles[0].stop(sim_t)
+                    lead.stop(sim_t)
