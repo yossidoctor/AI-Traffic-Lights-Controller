@@ -36,6 +36,19 @@ class Window:
         pygame.font.init()
         self._text_font = pygame.font.SysFont('Lucida Console', 16)
 
+    def update_display(self):
+        if self.screen:
+            self.draw_simulation()
+            pygame.display.update()
+            self.handle_window_events()
+
+    def loop(self, steps):
+        for _ in range(steps):
+            self.sim.update()
+            self.update_display()
+            if self.closed or self.sim.completed:
+                return
+
     def run(self, action) -> None:
         """
         Applies the action and runs a single simulation update cycle.
@@ -44,23 +57,20 @@ class Window:
         """
         if action:
             self.sim.update_signals()
-            for _ in range(200):
-                self.sim.update()
-                if self.screen:
-                    self.draw_simulation()
-                    pygame.display.update()
-                    self.handle_window_events()
-            self.sim.update_signals()
-
-        for _ in range(200):
-            if self.closed or self.sim.completed or self.sim.collision_detected:
+            self.update_display()
+            if self.closed or self.sim.completed:
                 return
-            self.sim.update()
-            self.sim.detect_collisions()
-            if self.screen:
-                self.draw_simulation()
-                pygame.display.update()
-                self.handle_window_events()
+
+            self.loop(200)
+            if self.closed or self.sim.completed:
+                return
+
+            self.sim.update_signals()
+            self.update_display()
+            if self.closed or self.sim.completed:
+                return
+
+        self.loop(100)
 
     def handle_window_events(self):
         """
@@ -220,18 +230,21 @@ class Window:
         screen_x, screen_y = self.rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
         if DRAW_VEHICLE_IDS:
             # For debugging purposes, todo comment-out before project submission
-            text_road_index = self._text_font.render(f'{vehicle.generation_index}', True, (255, 255, 255), (0, 0, 0))
+            text_road_index = self._text_font.render(f'{vehicle.index}', True, (255, 255, 255), (0, 0, 0))
             self.screen.blit(text_road_index, (screen_x, screen_y))
 
     def draw_vehicles(self):
-        for road in self.sim.roads:
+        for road in self.sim.non_empty_roads:
             for vehicle in road.vehicles:
                 self.draw_vehicle(vehicle, road)
 
     def draw_signals(self) -> None:
         for signal in self.sim.traffic_signals:
             for i in range(len(signal.roads)):
-                color = (0, 255, 0) if signal.current_cycle[i] else (255, 0, 0)
+                if signal.current_cycle == (False, False):
+                    color = (255, 255, 0) if signal.cycle[signal.current_cycle_index - 1][i] else (255, 0, 0)
+                else:
+                    color = (0, 255, 0) if signal.current_cycle[i] else (255, 0, 0)
                 for road in signal.roads[i]:
                     a = 0
                     position = ((1 - a) * road.end[0] + a * road.start[0],
@@ -246,9 +259,9 @@ class Window:
             return self._text_font.render(text, True, color, background)
 
         t = render(f't: {self.sim.t:.2f}')
-        fps = render(f'frames: {self.sim.frame_count}')
+        # fps = render(f'frames: {self.sim.frame_count}')
         self.screen.blit(t, (10, 20))
-        self.screen.blit(fps, (10, 40))
+        # self.screen.blit(fps, (10, 40))
         # n_vehicles_generated = render(f'Generated: {self.sim.n_vehicles_generated}')
         # n_vehicles_on_map = render(f'On map: {self.sim.n_vehicles_on_map}')
         # self.screen.blit(n_vehicles_generated, (10, 60))
