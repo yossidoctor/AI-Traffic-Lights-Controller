@@ -76,12 +76,14 @@ class Simulation:
         for road in roads:
             self.create_road(*road)
 
-    def create_gen(self, vehicle_rate, paths_dict):
-        gen = VehicleGenerator(self, vehicle_rate, paths_dict)
+    def create_gen(self, vehicle_rate, paths: List[List]):
+        inbound_roads: List[Road] = [self.roads[roads[0]] for weight, roads in paths]
+        inbound_dict: Dict[int: Road] = {road.index: road for road in inbound_roads}
+        gen = VehicleGenerator(vehicle_rate, paths, inbound_dict)
         self.generators.append(gen)
         return gen
 
-    def create_signal(self, roads, cycle, slow_distance, slow_factor, stop_distance):
+    def create_signal(self, roads: List[List[int]], cycle, slow_distance, slow_factor, stop_distance):
         roads = [[self.roads[i] for i in road_group] for road_group in roads]
         sig = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
         self.traffic_signals.append(sig)
