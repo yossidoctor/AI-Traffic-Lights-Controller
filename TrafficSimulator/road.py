@@ -40,15 +40,7 @@ class Road:
 
     def update(self, dt, sim_t):
         n = len(self.vehicles)
-
         if n > 0:
-            # Update first vehicle
-            self.vehicles[0].update(None, dt, self)
-            # Update other vehicles
-            for i in range(1, n):
-                lead = self.vehicles[i - 1]
-                self.vehicles[i].update(lead, dt, self)
-
             lead: Vehicle = self.vehicles[0]
             # Check for traffic signal
             if self.traffic_signal_state:
@@ -60,8 +52,15 @@ class Road:
                 # If traffic signal is red
                 if lead.x >= self.length - self.traffic_signal.slow_distance:
                     # Slow vehicles in slowing zone
-                    lead.slow(self.traffic_signal.slow_factor * lead._v_max)
+                    lead.slow(self.traffic_signal.slow_factor)
                 if self.length - self.traffic_signal.stop_distance <= lead.x <= \
                         self.length - self.traffic_signal.stop_distance / 2:
                     # Stop vehicles in the stop zone
                     lead.stop(sim_t)
+
+            # Update first vehicle
+            lead.update(None, dt)
+            # Update other vehicles
+            for i in range(1, n):
+                lead = self.vehicles[i - 1]
+                self.vehicles[i].update(lead, dt)

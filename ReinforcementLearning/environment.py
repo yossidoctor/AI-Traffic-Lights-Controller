@@ -2,8 +2,6 @@ from typing import Tuple
 
 from TrafficSimulator import Window, two_way_intersection
 
-MAX_GEN = 50
-
 
 class Environment:
     def __init__(self):
@@ -12,6 +10,7 @@ class Environment:
         Route = (vehicle_1, ..., vehicle_n)
         Vehicle = (vehicle.x, vehicle.v, vehicle.a, signal_state)
         0 <= vehicle.x <= 49,   0 <= vehicle.v <= 16,   -4 <= vehicle.a <= 1,   0 <= signal_state <= 1 """
+        self.max_gen = 30
         self.window = Window()
         self.action_space = [0, 1]
 
@@ -53,9 +52,10 @@ class Environment:
 
     def render(self):
         if not self.window.screen:
-            self.window.init_display()
+            self.window.init_screen()
+        self.window.update_screen()
 
     def reset(self):
-        self.window.sim = two_way_intersection(MAX_GEN)
+        self.window.sim = two_way_intersection(self.max_gen)
         init_state = self.get_state()
         return init_state

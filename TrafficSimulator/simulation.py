@@ -1,8 +1,6 @@
 from copy import deepcopy
 from statistics import mean
-from typing import List, Dict, Tuple
-
-from scipy.spatial import distance
+from typing import List, Dict, Tuple, Set
 
 from TrafficSimulator import Road, VehicleGenerator, TrafficSignal
 
@@ -14,9 +12,10 @@ class Simulation:
         self.roads: List[Road] = []  # Array to store roads
         self.generators: List[VehicleGenerator] = []
         self.traffic_signals: List[TrafficSignal] = []
+        self.non_empty_roads: Set[int] = set()
 
-        self._intersections: Dict[int, List[int]] = {}  # {Road index: List of all intersecting roads' indexes}
-        self.collision_detected = False
+        # self._intersections: Dict[int, List[int]] = {}  # {Road index: List of all intersecting roads' indexes}
+        # self.collision_detected = False
         self._max_gen = max_gen  # Limits the amount of cars generated in a single simulation
         self.n_vehicles_generated = 0
         self.n_vehicles_on_map = 0
@@ -27,27 +26,26 @@ class Simulation:
         """
         Whether a terminal state (as defined under the MDP of the task) is reached.
         """
-        a = self.collision_detected
-        b = self._max_gen and (self.n_vehicles_generated == self._max_gen) and (not self.n_vehicles_on_map)
-        return a or b
+        # a = self.collision_detected
+        # b = self._max_gen and (self.n_vehicles_generated == self._max_gen) and (not self.n_vehicles_on_map)
+        b = self._max_gen and (self.n_vehicles_generated == self._max_gen) and \
+            (not self.n_vehicles_on_map)
+        # return a or b
+        return b
 
-    @property
-    def non_empty_roads(self) -> List[Road]:
-        return list(filter(lambda road: road.vehicles, self.roads))
-
-    @property
-    def intersections(self) -> Dict[int, List[int]]:
-        """
-        Reduces the intersections' dict to non-empty roads
-        :return: a dictionary of {non-empty road indexes: non-empty intersecting road indexes}
-        """
-        output: Dict[int, List[int]] = {}
-        for road_index, intersecting_indexes in self._intersections.items():
-            if self.roads[road_index].vehicles:
-                intersecting_indexes = [i for i in intersecting_indexes if self.roads[i].vehicles]
-                if intersecting_indexes:
-                    output[road_index] = intersecting_indexes
-        return output
+    # @property
+    # def intersections(self) -> Dict[int, List[int]]:
+    #     """
+    #     Reduces the intersections' dict to non-empty roads
+    #     :return: a dictionary of {non-empty road indexes: non-empty intersecting road indexes}
+    #     """
+    #     output: Dict[int, List[int]] = {}
+    #     for road_index, intersecting_indexes in self._intersections.items():
+    #         if self.roads[road_index].vehicles:
+    #             intersecting_indexes = [i for i in intersecting_indexes if self.roads[i].vehicles]
+    #             if intersecting_indexes:
+    #                 output[road_index] = intersecting_indexes
+    #     return output
 
     def get_average_wait_time(self):
         """Returns the average wait time of the vehicles that completed their journey and were removed from the map"""
@@ -55,22 +53,22 @@ class Simulation:
             return 0
         return mean(self._waiting_time_log)
 
-    def detect_collisions(self) -> None:
-        """Detects collisions between roads in the intersections"""
-        radius = 2
-        for i, intersecting_indexes in self.intersections.items():
-            vehicles = self.roads[i].vehicles
-            intersecting_vehicles = []
-            for j in intersecting_indexes:
-                intersecting_vehicles += [vehicle for vehicle in self.roads[j].vehicles]
-            for vehicle in vehicles:
-                for intersecting_vehicle in intersecting_vehicles:
-                    if distance.euclidean(vehicle.position, intersecting_vehicle.position) < radius:
-                        self.collision_detected = True
-                        return
+    # def detect_collisions(self) -> None:
+    #     """Detects collisions between roads in the intersections"""
+    #     radius = 2
+    #     for i, intersecting_indexes in self.intersections.items():
+    #         vehicles = self.roads[i].vehicles
+    #         intersecting_vehicles = []
+    #         for j in intersecting_indexes:
+    #             intersecting_vehicles += [vehicle for vehicle in self.roads[j].vehicles]
+    #         for vehicle in vehicles:
+    #             for intersecting_vehicle in intersecting_vehicles:
+    #                 if distance.euclidean(vehicle.position, intersecting_vehicle.position) < radius:
+    #                     self.collision_detected = True
+    #                     return
 
-    def create_intersections(self, intersections_dict):
-        self._intersections = self._intersections | intersections_dict
+    # def create_intersections(self, intersections_dict):
+    #     self._intersections = self._intersections | intersections_dict
 
     def create_road(self, start, end):
         road = Road(start, end, index=len(self.roads))
@@ -104,19 +102,24 @@ class Simulation:
         detects collisions and increments time
         """
         # Update every road
-        for road in self.non_empty_roads:
-            road.update(self.dt, self.t)
+        for i in self.non_empty_roads:
+            self.roads[i].update(self.dt, self.t)
 
         # Add vehicles
         for gen in self.generators:
             if self._max_gen and self.n_vehicles_generated == self._max_gen:
                 break
-            generated = gen.update(self.t, self.n_vehicles_generated)
-            self.n_vehicles_generated += generated
-            self.n_vehicles_on_map += generated
+            road_index = gen.update(self.t, self.n_vehicles_generated)
+            if road_index is not None:
+                self.n_vehicles_generated += 1
+                self.n_vehicles_on_map += 1
+                self.non_empty_roads.add(road_index)
 
         # Check roads for out of bounds vehicle
-        for road in self.non_empty_roads:
+        new_roads = set()
+        empty_roads = set()
+        for i in self.non_empty_roads:
+            road = self.roads[i]
             lead = road.vehicles[0]
             # If first vehicle is out of road bounds
             if lead.x >= road.length:
@@ -129,17 +132,24 @@ class Simulation:
                     new_vehicle.x = 0
                     # Add it to the next road
                     next_road_index = lead.path[lead.current_road_index]
+                    new_roads.add(next_road_index)
                     self.roads[next_road_index].vehicles.append(new_vehicle)
                     # Remove it from its road
                     road.vehicles.popleft()
+                    if not road.vehicles:
+                        empty_roads.add(road.index)
                 else:
                     # Remove it from its road
                     removed_vehicle = road.vehicles.popleft()
+                    if not road.vehicles:
+                        empty_roads.add(road.index)
                     self.n_vehicles_on_map -= 1
                     # Update the log
                     self._waiting_time_log.append(removed_vehicle.get_total_waiting_time(self.t))
 
-        self.detect_collisions()
+        self.non_empty_roads -= empty_roads
+        self.non_empty_roads.update(new_roads)
+        # self.detect_collisions()
 
         # Increment time
         self.t += self.dt

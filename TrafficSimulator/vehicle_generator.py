@@ -22,7 +22,9 @@ class VehicleGenerator:
                 return Vehicle(path)
 
     def update(self, sim_t, n_vehicles_generated):
-        """Generates a vehicle if the generation conditions are satisfied"""
+        """Generates a vehicle if the generation conditions are satisfied
+        :return: road index if a vehicle was generated, else None
+        """
         # If there's no vehicles on the map, or if the time elapsed after last
         # generation is greater than the vehicle rate, generate a vehicle
         time_elapsed = sim_t - self._last_added_time >= 60 / self._vehicle_rate
@@ -32,8 +34,8 @@ class VehicleGenerator:
             # If the road is empty, or there's enough space for the generated vehicle, add it
             if not road.vehicles or road.vehicles[-1].x > vehicle.s0 + vehicle.length:
                 vehicle.index = n_vehicles_generated
-                vehicle.position = road.start
+                # vehicle.position = road.start
                 road.vehicles.append(vehicle)
                 self._last_added_time = sim_t
-                return True
-        return False
+                return road.index
+        return None

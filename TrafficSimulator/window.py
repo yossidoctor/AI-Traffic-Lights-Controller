@@ -8,7 +8,7 @@ from TrafficSimulator import Simulation
 DRAW_VEHICLE_IDS = False
 DRAW_ROAD_IDS = False
 # DRAW_GRIDLINES = True
-FILL_POLYGONS = False
+FILL_POLYGONS = True
 
 
 class Window:
@@ -31,25 +31,26 @@ class Window:
         self.screen = None
         self._text_font = None
 
-    def init_display(self):
+    def init_screen(self):
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.flip()
 
         pygame.font.init()
         self._text_font = pygame.font.SysFont('Lucida Console', 16)
 
-        self.update_display()
+        self.update_screen()
 
-    def update_display(self):
-        if self.screen:
+    def update_screen(self):
+        if self.screen:  # sanity check
             self.draw_simulation()
             pygame.display.update()
             self.handle_window_events()
 
-    def loop(self, steps):
+    def _loop(self, steps):
         for _ in range(steps):
             self.sim.update()
-            self.update_display()
+            if self.screen:
+                self.update_screen()
             if self.closed or self.sim.completed:
                 return
 
@@ -61,20 +62,22 @@ class Window:
         """
         if action:
             self.sim.update_signals()
-            self.update_display()
+            if self.screen:
+                self.update_screen()
             if self.closed or self.sim.completed:
                 return
 
-            self.loop(200)
+            self._loop(180)
             if self.closed or self.sim.completed:
                 return
 
             self.sim.update_signals()
-            self.update_display()
+            if self.screen:
+                self.update_screen()
             if self.closed or self.sim.completed:
                 return
 
-        self.loop(200)
+        self._loop(180)
 
     def handle_window_events(self):
         """
@@ -140,7 +143,8 @@ class Window:
         return (int(-self.offset[0] + (x - self.width / 2) / self.zoom),
                 int(-self.offset[1] + (y - self.height / 2) / self.zoom))
 
-    def rotated_box(self, pos, size, angle=None, cos=None, sin=None, centered=True, color=(0, 0, 255)):
+    def rotated_box(self, pos, size, angle=None, cos=None, sin=None, centered=True,
+                    color=(0, 0, 255)):
         """Draws a rectangle center at *pos* with size *size* rotated anti-clockwise by *angle*."""
 
         def vertex(e1, e2):
@@ -232,11 +236,13 @@ class Window:
         screen_x, screen_y = self.rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
         if DRAW_VEHICLE_IDS:
             # For debugging purposes, todo comment-out before project submission
-            text_road_index = self._text_font.render(f'{vehicle.index}', True, (255, 255, 255), (0, 0, 0))
+            text_road_index = self._text_font.render(f'{vehicle.index}', True, (255, 255, 255),
+                                                     (0, 0, 0))
             self.screen.blit(text_road_index, (screen_x, screen_y))
 
     def draw_vehicles(self):
-        for road in self.sim.non_empty_roads:
+        for i in self.sim.non_empty_roads:
+            road = self.sim.roads[i]
             for vehicle in road.vehicles:
                 self.draw_vehicle(vehicle, road)
 
@@ -244,7 +250,8 @@ class Window:
         for signal in self.sim.traffic_signals:
             for i in range(len(signal.roads)):
                 if signal.current_cycle == (False, False):
-                    color = (255, 255, 0) if signal.cycle[signal.current_cycle_index - 1][i] else (255, 0, 0)
+                    color = (255, 255, 0) if signal.cycle[signal.current_cycle_index - 1][i] else (
+                        255, 0, 0)
                 else:
                     color = (0, 255, 0) if signal.current_cycle[i] else (255, 0, 0)
                 for road in signal.roads[i]:
