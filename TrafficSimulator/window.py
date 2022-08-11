@@ -1,6 +1,8 @@
 import numpy as np
-import pygame
-from pygame import draw
+import pygame.display
+from pygame.display import set_mode, flip, update
+from pygame.font import SysFont
+from pygame.draw import polygon, line
 
 from TrafficSimulator import Simulation
 
@@ -32,11 +34,11 @@ class Window:
         self._text_font = None
 
     def init_screen(self):
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.flip()
+        self.screen = display.set_mode((self.width, self.height))
+        display.flip()
 
-        pygame.font.init()
-        self._text_font = pygame.font.SysFont('Lucida Console', 16)
+        font.init()
+        self._text_font = font.SysFont('Lucida Console', 16)
 
         self.update_screen()
 
@@ -159,14 +161,14 @@ class Window:
             points = self.convert([vertex(*e) for e in [(-1, -1), (-1, 1), (1, 1), (1, -1)]])
         else:
             points = self.convert([vertex(*e) for e in [(0, -1), (0, 1), (2, 1), (2, -1)]])
-        # draw.polygon(self.screen, color, points)
+        # polygon(self.screen, color, points)
         # For debugging purposes, todo comment-out before project submission
         width = 0 if FILL_POLYGONS else 2
         x1, x2 = points[0][0], points[2][0]
         y1, y2 = points[0][1], points[2][1]
         screen_x = x1 + (x2 - x1) / 2
         screen_y = y1 + (y2 - y1) / 2
-        draw.polygon(self.screen, color, points, width)
+        polygon(self.screen, color, points, width)
         return screen_x, screen_y
 
     def draw_arrow(self, pos, size, angle=None, cos=None, sin=None, color=(150, 150, 190)):
@@ -188,8 +190,8 @@ class Window:
     # def draw_axes(self, color=(100, 100, 100)):
     #     x_start, y_start = self.inverse_convert(0, 0)
     #     x_end, y_end = self.inverse_convert(self.width, self.height)
-    #     draw.line(self.screen, self.convert((0, y_start)), self.convert((0, y_end)), color)
-    #     draw.line(self.screen, self.convert((x_start, 0)), self.convert((x_end, 0)), color)
+    #     line(self.screen, self.convert((0, y_start)), self.convert((0, y_end)), color)
+    #     line(self.screen, self.convert((x_start, 0)), self.convert((x_end, 0)), color)
     #
     # def draw_grid(self, unit=50, color=(150, 150, 150)):
     #     x_start, y_start = self.inverse_convert(0, 0)
@@ -199,9 +201,9 @@ class Window:
     #     m_x = int(x_end / unit) + 1
     #     m_y = int(y_end / unit) + 1
     #     for i in range(n_x, m_x):
-    #         draw.line(self.screen, self.convert((unit * i, y_start)), self.convert((unit * i, y_end)), color)
+    #         line(self.screen, self.convert((unit * i, y_start)), self.convert((unit * i, y_end)), color)
     #     for i in range(n_y, m_y):
-    #         draw.line(self.screen, self.convert((x_start, unit * i)), self.convert((x_end, unit * i)), color)
+    #         line(self.screen, self.convert((x_start, unit * i)), self.convert((x_end, unit * i)), color)
 
     def draw_roads(self):
         for road in self.sim.roads:
