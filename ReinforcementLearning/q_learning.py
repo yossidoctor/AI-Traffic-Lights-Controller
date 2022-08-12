@@ -45,8 +45,7 @@ def train_agent(q_agent, env, path, n_episodes, render=False):
 
 def validate_agent(q_agent, env, n_episodes, render=False):
     print(f"Evaluating agent for {n_episodes} episodes.\n")
-    # total_scores, total_wait_time, total_collisions = 0, 0, 0
-    total_scores, total_wait_time = 0, 0
+    total_scores, total_wait_time, total_collisions = 0, 0, 0
     for n_episode in range(n_episodes):
         state = env.reset()
         score = 0
@@ -61,7 +60,7 @@ def validate_agent(q_agent, env, n_episodes, render=False):
                 return
             state = next_state
             score += reward
-            # total_collisions += env.window.sim.collision_detected
+            total_collisions += env.window.sim.collision_detected
 
         total_scores += score
         total_wait_time += env.window.sim.get_average_wait_time()
@@ -69,17 +68,17 @@ def validate_agent(q_agent, env, n_episodes, render=False):
     print(f"Results after {n_episodes} episodes:")
     print(f"Average score per episode: {total_scores / n_episodes:.2f}")
     print(f"Average wait time per episode: {total_wait_time / n_episodes:.2f}")
-    # print(f"Average collisions per episode: {total_collisions / n_episodes:.2f}")
+    print(f"Average collisions per episode: {total_collisions / n_episodes:.2f}")
 
 
 if __name__ == '__main__':
     env: Environment = Environment()
     actions = len(env.action_space)
     q_agent = QLearningAgent(alpha=alpha, epsilon=epsilon, discount=discount, actions=actions)
-    # n_train_episodes = 142800  # observation space size
+    # n_train_episodes = 435456  # observation space size
     n_train_episodes = 10
     n_eval_episodes = 5
-    file_name = f'ep{n_train_episodes}_{alpha}_{epsilon}_{discount}_{env.max_gen}.txt'
+    file_name = f'ep{n_train_episodes}_a{alpha}_e{epsilon}_d{discount}_m{env.max_gen}.txt'
     # train_agent(q_agent, env, file_name, n_episodes=n_train_episodes, render=False)
     q_agent.q_values = eval(get_q_values(file_name))
     validate_agent(q_agent, env, n_episodes=n_eval_episodes, render=False)
