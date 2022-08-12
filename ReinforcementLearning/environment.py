@@ -5,38 +5,24 @@ from TrafficSimulator import Window, two_way_intersection
 
 class Environment:
     def __init__(self):
-        """ Observation space (size: 142,800):
-        State = (route1, route2)
-        Route = (vehicle_1, ..., vehicle_n)
-        Vehicle = (vehicle.x, vehicle.v, vehicle.a, signal_state)
-        0 <= vehicle.x <= 49,   0 <= vehicle.v <= 16,   -4 <= vehicle.a <= 1,   0 <= signal_state <= 1 """
+        """ Observation space:
+        State = (closest_lead_vehicle_to_red_traffic_signal, n_vehicles_on_green_light_route, n_vehicles_on_red_light_route)  # (1700 + 1) * 16 * 16 = 435,456
+        Vehicle = (vehicle.x, vehicle.v, signal_state)  # n = 50 * 17 * 2 = 1700 (+ 1 for None)
+        0 <= vehicle.x <= 49,   0 <= vehicle.v <= 16,   0 <= signal_state <= 1 """
         self.max_gen = 30
         self.window = Window()
         self.action_space = [0, 1]
 
     def get_state(self) -> Tuple[Tuple, Tuple]:
-        def get_stats(vehicle) -> Tuple[int, int, int, bool]:
-            signal_state = self.window.sim.roads[vehicle.path[vehicle.current_road_index]].traffic_signal_state
-            return int(vehicle.x), int(vehicle.v), int(vehicle.a), signal_state
-
-        west_east_indexes = [0, 2]
-        west_east_roads = [self.window.sim.roads[i] for i in west_east_indexes]
-        west_east_vehicles = [vehicle for road in west_east_roads for vehicle in road.vehicles]
-        west_east_route = [get_stats(vehicle) for vehicle in west_east_vehicles]
-
-        south_north_indexes = [1, 3]
-        south_north_roads = [self.window.sim.roads[i] for i in south_north_indexes]
-        south_north_vehicles = [vehicle for road in south_north_roads for vehicle in road.vehicles]
-        south_north_route = [get_stats(vehicle) for vehicle in south_north_vehicles]
-
-        return tuple(west_east_route), tuple(south_north_route)
+        # todo: don't forget to round (int()) the vehicle stats
+        return ()
 
     def step(self, step_action):
         self.window.run(step_action)
 
         new_state = self.get_state()
 
-        step_reward = self.get_reward(new_state, step_action)
+        step_reward = self.get_reward(new_state)
 
         # Whether a terminal state (as defined under the MDP of the task) is reached.
         terminated = self.window.sim.completed
@@ -47,7 +33,11 @@ class Environment:
 
         return new_state, step_reward, terminated, truncated
 
-    def get_reward(self, new_state, step_action):
+    def get_reward(self, state):
+        # todo: check if any lead vehicle is unable to stop and it has a red light (low-weighted negative reward)
+        # todo: check how many vehicles passed since the last step, for positive reward (low-weighted positive reward)
+        # todo: check if simulation completed (high-weighted positive reward)
+        # todo: check if there's any collisions (high-weighted negative reward)
         return 0
 
     def render(self):
