@@ -137,11 +137,12 @@ class Simulation:
                         empty_roads.add(road.index)
                     self.n_vehicles_on_map -= 1
                     # Update the log
-                    self._waiting_time_log.append(removed_vehicle.get_total_waiting_time(self.t))
+                    wait_time = removed_vehicle.get_total_waiting_time(self.t)
+                    self._waiting_time_log.append(wait_time)
 
         self.non_empty_roads -= empty_roads
         self.non_empty_roads |= new_roads
-        # self.detect_collisions()
+        self.detect_collisions()
 
         # Increment time
         self.t += self.dt
