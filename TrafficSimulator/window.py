@@ -1,8 +1,6 @@
 import numpy as np
-import pygame.display
-from pygame.display import set_mode, flip, update
-from pygame.font import SysFont
-from pygame.draw import polygon, line
+import pygame
+from pygame.draw import polygon
 
 from TrafficSimulator import Simulation
 
@@ -34,11 +32,11 @@ class Window:
         self._text_font = None
 
     def init_screen(self):
-        self.screen = display.set_mode((self.width, self.height))
-        display.flip()
+        self.screen = pygame.display.set_mode((self.width, self.height))
+        pygame.display.flip()
 
-        font.init()
-        self._text_font = font.SysFont('Lucida Console', 16)
+        pygame.font.init()
+        self._text_font = pygame.font.SysFont('Lucida Console', 16)
 
         self.update_screen()
 
@@ -59,7 +57,7 @@ class Window:
     def run(self, action) -> None:
         """
         Applies the action and runs a single simulation update cycle.
-        Stops prematurely if the window is closed, the simulation completed or a collision was detected
+        Stops prematurely if the window is closed, the simulation completed or a collision detected
         :param action: an action from the environment action space
         """
         if action:
@@ -69,7 +67,7 @@ class Window:
             if self.closed or self.sim.completed:
                 return
 
-            self._loop(180)
+            self._loop(self.fps * 3)
             if self.closed or self.sim.completed:
                 return
 
@@ -79,7 +77,7 @@ class Window:
             if self.closed or self.sim.completed:
                 return
 
-        self._loop(180)
+        self._loop(self.fps * 3)
 
     def handle_window_events(self):
         """

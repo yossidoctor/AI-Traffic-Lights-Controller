@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
@@ -28,7 +28,7 @@ class Vehicle:
         self.path: List[int] = path  # Road indexes
         self.current_road_index = 0
 
-        # Used for collision detection, initial value set in vehicle.update() upon adding it to the map
+        # Used for collision detection, value set upon adding it to the map in vehicle.update()
         self.position: Tuple = (None, None)
 
     def __str__(self):
@@ -39,9 +39,10 @@ class Vehicle:
             return self._total_waiting_time + (sim_t - self._last_time_stopped)
         return self._total_waiting_time
 
-    def update(self, lead, dt):
+    def update(self, lead, dt, road):
         """
         Updates the vehicle position velocity, and acceleration
+        :param road: vehicle's road
         :param lead: vehicle
         :param dt: simulation time step
         """

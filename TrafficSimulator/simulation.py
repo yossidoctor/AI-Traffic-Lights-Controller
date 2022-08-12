@@ -1,8 +1,10 @@
 from copy import deepcopy
 # import itertools
-from itertools import product, chain
+from itertools import chain
 from statistics import mean
-from typing import List, Dict, Tuple, Set, FrozenSet
+from typing import List, Dict, Tuple, Set
+
+from scipy.spatial import distance
 
 from TrafficSimulator import Road, VehicleGenerator, TrafficSignal
 
@@ -11,12 +13,12 @@ class Simulation:
     def __init__(self, max_gen=None):
         self.t = 0.0  # Time keeping
         self.dt = 1 / 60  # Simulation time step
-        self.roads: List[Road] = []  # Array to store roads
+        self.roads: List[Road] = []
         self.generators: List[VehicleGenerator] = []
         self.traffic_signals: List[TrafficSignal] = []
         self.non_empty_roads: Set[int] = set()
 
-        self._intersections: Dict[int, Set[int]] = {}  # {Road index: List of all intersecting roads' indexes}
+        self._intersections: Dict[int, Set[int]] = {}  # {Road index: [intersecting roads' indexes]}
         self.collision_detected = False
         self._max_gen = max_gen  # Limits the amount of cars generated in a single simulation
         self.n_vehicles_generated = 0
@@ -29,7 +31,8 @@ class Simulation:
         Whether a terminal state (as defined under the MDP of the task) is reached.
         """
         a = self.collision_detected
-        b = self._max_gen and (self.n_vehicles_generated == self._max_gen) and (not self.n_vehicles_on_map)
+        b = self._max_gen and (self.n_vehicles_generated == self._max_gen) and \
+            not self.n_vehicles_on_map
         return a or b
 
     @property
@@ -38,11 +41,18 @@ class Simulation:
         Reduces the intersections' dict to non-empty roads
         :return: a dictionary of {non-empty road index: [non-empty intersecting roads indexes]}
         """
-        output: Dict[int, Set[int]] = {k, v.intersection(non_empty_roads) for k, v in self._intersections.items() if k in non_empty_roads and v.intersection(non_empty_roads)}
+        output: Dict[int, Set[int]] = {}
+        non_empty_roads = self.non_empty_roads
+        for road in non_empty_roads:
+            if road in self._intersections:
+                intersecting_roads = self._intersections[road].intersection(non_empty_roads)
+                if intersecting_roads:
+                    output[road] = intersecting_roads
         return output
 
     def get_average_wait_time(self):
-        """Returns the average wait time of the vehicles that completed their journey and were removed from the map"""
+        """Returns the average wait time of the vehicles that completed
+        their journey and were removed from the map"""
         if not self._waiting_time_log:
             return 0
         return mean(self._waiting_time_log)
@@ -50,14 +60,16 @@ class Simulation:
     def detect_collisions(self) -> None:
         """Detects collisions between roads in the intersections"""
         radius = 3
-        # Transform the intersections' dict of non empty-roads to {vehicles: [all possibly intersecting vehicles]}
-        intersections: Dict[FrozenSet[Vehicle], Set[Vehicle]] = {frozenset(self.roads[k].vehicles), set(chain.from_iterable([self.sim.roads[r].vehicles for r in v])) for k, v in self._intersections.items()}
-        # Generate all combinations of possibly collided vehicles
-        possibly_collided_vehicles = chain.from_iterable(product(vehicles, intersecting_vehicles) for vehicles, intersecting_vehicles in intersections.items()))
-        collision_detected = (distance.euclidean(a.position, b.position) < radius for a, b in possibly_collided_vehicles)
-        if any(collision_detected):
-            self.collision_detected = True
-            return
+        # Transform the intersections' dict to {vehicles: [possibly intersecting vehicles]}
+        for road, intersecting_roads in self.intersections.items():
+            vehicles = self.roads[road].vehicles
+            intersecting_vehicles = chain.from_iterable(
+                self.roads[i].vehicles for i in intersecting_roads)
+            for vehicle in vehicles:
+                for intersecting in intersecting_vehicles:
+                    if distance.euclidean(vehicle.position, intersecting.position) < radius:
+                        self.collision_detected = True
+                        return
 
     def create_intersections(self, intersections_dict):
         self._intersections = self._intersections | intersections_dict
@@ -78,7 +90,8 @@ class Simulation:
         self.generators.append(gen)
         return gen
 
-    def create_signal(self, roads: List[List[int]], cycle, slow_distance, slow_factor, stop_distance):
+    def create_signal(self, roads: List[List[int]], cycle, slow_distance, slow_factor,
+                      stop_distance):
         roads = [[self.roads[i] for i in road_group] for road_group in roads]
         sig = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
         self.traffic_signals.append(sig)

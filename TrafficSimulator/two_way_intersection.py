@@ -122,15 +122,15 @@ t72 = turn(72)
 t87 = turn(87)
 t102 = turn(102)
 t117 = turn(117)
-d1 = {8: [9, 11, *t42, *t57, *t87, *t117]}
-d2 = {9: [10, *t12, *t27, *t72, *t87, *t117]}
-d3 = {10: [11, *t27, *t57, *t102, *t117]}
-d4 = {11: [*t12, *t27, *t57, *t87]}
-d5 = {road: [*t87] for road in t12}
-d6 = {road: [*t57, *t72, *t117] for road in t27}
-d7 = {road: [*t117] for road in t42}
-d8 = {road: [*t87, *t102] for road in t57}
-d9 = {road: [*t117] for road in t87}
+d1 = {8: {9, 11, *t42, *t57, *t87, *t117}}
+d2 = {9: {10, *t12, *t27, *t72, *t87, *t117}}
+d3 = {10: {11, *t27, *t57, *t102, *t117}}
+d4 = {11: {*t12, *t27, *t57, *t87}}
+d5 = {road: {*t87} for road in t12}
+d6 = {road: {*t57, *t72, *t117} for road in t27}
+d7 = {road: {*t117} for road in t42}
+d8 = {road: {*t87, *t102} for road in t57}
+d9 = {road: {*t117} for road in t87}
 
 INTERSECTIONS_DICT = {
     **d1,
