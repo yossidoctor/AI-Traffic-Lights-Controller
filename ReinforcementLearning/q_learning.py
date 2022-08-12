@@ -78,7 +78,7 @@ def validate_agent(q_agent, env, n_episodes, render=False):
 
 if __name__ == '__main__':
     env: Environment = Environment()
-    actions = len(env.action_space)
+    actions = env.action_space
     q_agent = QLearningAgent(alpha=alpha, epsilon=epsilon, discount=discount, actions=actions)
     # n_train_episodes = env.observation_space_size  # observation space size
     n_train_episodes = 10
