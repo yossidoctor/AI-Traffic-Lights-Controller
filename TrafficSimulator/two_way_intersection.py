@@ -113,36 +113,36 @@ PATHS = [
     # [1, [3, *turn(12 + 7 * n), 6]]  # NORTH LEFT EAST
 ]
 
-# # Intersections
-# t12 = turn(12)
-# t27 = turn(27)
-# t42 = turn(42)
-# t57 = turn(56)
-# t72 = turn(72)
-# t87 = turn(87)
-# t102 = turn(102)
-# t117 = turn(117)
-# d1 = {8: [9, 11, *t42, *t57, *t87, *t117]}
-# d2 = {9: [10, *t12, *t27, *t72, *t87, *t117]}
-# d3 = {10: [11, *t27, *t57, *t102, *t117]}
-# d4 = {11: [*t12, *t27, *t57, *t87]}
-# d5 = {road: [*t87] for road in t12}
-# d6 = {road: [*t57, *t72, *t117] for road in t27}
-# d7 = {road: [*t117] for road in t42}
-# d8 = {road: [*t87, *t102] for road in t57}
-# d9 = {road: [*t117] for road in t87}
+# Intersections
+t12 = turn(12)
+t27 = turn(27)
+t42 = turn(42)
+t57 = turn(56)
+t72 = turn(72)
+t87 = turn(87)
+t102 = turn(102)
+t117 = turn(117)
+d1 = {8: [9, 11, *t42, *t57, *t87, *t117]}
+d2 = {9: [10, *t12, *t27, *t72, *t87, *t117]}
+d3 = {10: [11, *t27, *t57, *t102, *t117]}
+d4 = {11: [*t12, *t27, *t57, *t87]}
+d5 = {road: [*t87] for road in t12}
+d6 = {road: [*t57, *t72, *t117] for road in t27}
+d7 = {road: [*t117] for road in t42}
+d8 = {road: [*t87, *t102] for road in t57}
+d9 = {road: [*t117] for road in t87}
 
-# INTERSECTIONS_DICT = {
-#     **d1,
-#     **d2,
-#     **d3,
-#     **d4,
-#     **d5,
-#     **d6,
-#     **d7,
-#     **d8,
-#     **d9
-# }
+INTERSECTIONS_DICT = {
+    **d1,
+    **d2,
+    **d3,
+    **d4,
+    **d5,
+    **d6,
+    **d7,
+    **d8,
+    **d9
+}
 
 # Signals
 SIGNALS = [[0, 2], [1, 3]]  # WEST, EAST, SOUTH NORTH
@@ -157,5 +157,5 @@ def two_way_intersection(max_gen=None):
     sim.create_roads(ROADS)
     sim.create_gen(VEHICLE_RATE, PATHS)
     sim.create_signal(SIGNALS, CYCLE, SLOW_DISTANCE, SLOW_FACTOR, STOP_DISTANCE)
-    # sim.create_intersections(INTERSECTIONS_DICT)
+    sim.create_intersections(INTERSECTIONS_DICT)
     return sim
