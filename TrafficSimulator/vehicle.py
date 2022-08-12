@@ -28,8 +28,8 @@ class Vehicle:
         self.path: List[int] = path  # Road indexes
         self.current_road_index = 0
 
-        # # Used for collision detection, initial value set in vehicle.update() upon adding it to the map
-        # self.position: Tuple = (None, None)
+        # Used for collision detection, initial value set in vehicle.update() upon adding it to the map
+        self.position: Tuple = (None, None)
 
     def __str__(self):
         return f'{self.index}'
@@ -66,11 +66,11 @@ class Vehicle:
         if self.is_stopped:
             self.a = -self.b_max * self.v / self.v_max
 
-        # # Update position
-        # sin, cos = road.angle_sin, road.angle_cos
-        # x = road.start[0] + cos * self.x
-        # y = road.start[1] + sin * self.x
-        # self.position = x, y
+        # Update position
+        sin, cos = road.angle_sin, road.angle_cos
+        x = road.start[0] + cos * self.x
+        y = road.start[1] + sin * self.x
+        self.position = x, y
 
     def stop(self, t):
         if not self.is_stopped:
