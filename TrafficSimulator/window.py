@@ -32,24 +32,55 @@ class Window:
         self._text_font = None
 
     def init_screen(self):
+        # Create a pygame window
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.flip()
+        
+        # Fixed fps
+        clock = pygame.time.Clock()
 
+        # To draw text
         pygame.font.init()
         self._text_font = pygame.font.SysFont('Lucida Console', 16)
-
-        self.update_screen()
 
     def update_screen(self):
         if self.screen:  # sanity check
             self.draw_simulation()
             pygame.display.update()
-            self.handle_window_events()
+            clock.tick(self.fps)
+            
+            for event in pygame.event.get():
+            # Quit program if window is closed
+            if event.type == pygame.QUIT:
+                self.closed = True
+            # Handle mouse events
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # If mouse button down
+                if event.button == pygame.BUTTON_LEFT:
+                    # Left click
+                    x, y = pygame.mouse.get_pos()
+                    x0, y0 = self.offset
+                    self.mouse_last = (x - x0 * self.zoom, y - y0 * self.zoom)
+                    self.mouse_down = True
+                if event.button == pygame.BUTTON_WHEELUP:
+                    # Mouse wheel up
+                    self.zoom *= (self.zoom ** 2 + self.zoom / 4 + 1) / (self.zoom ** 2 + 1)
+                if event.button == pygame.BUTTON_WHEELDOWN:
+                    # Mouse wheel down
+                    self.zoom *= (self.zoom ** 2 + 1) / (self.zoom ** 2 + self.zoom / 4 + 1)
+            elif event.type == pygame.MOUSEMOTION:
+                # Drag content
+                if self.mouse_down:
+                    x1, y1 = self.mouse_last
+                    x2, y2 = pygame.mouse.get_pos()
+                    self.offset = ((x2 - x1) / self.zoom, (y2 - y1) / self.zoom)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.mouse_down = False
 
     def _loop(self, steps):
         for _ in range(steps):
             self.sim.update()
-            if self.screen:
+            if self.screen and _ % 2:  # Update the display every other sim update
                 self.update_screen()
             if self.closed or self.sim.completed:
                 return
@@ -78,52 +109,6 @@ class Window:
                 return
 
         self._loop(self.fps * 3)
-
-    def handle_window_events(self):
-        """
-        Handles UI events such as dragging the content, zooming in and out
-        """
-        for event in pygame.event.get():
-            # Quit program if window is closed
-            if event.type == pygame.QUIT:
-                self.closed = True
-            # Handle mouse events
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                # If mouse button down
-                if event.button == pygame.BUTTON_LEFT:
-                    # Left click
-                    x, y = pygame.mouse.get_pos()
-                    x0, y0 = self.offset
-                    self.mouse_last = (x - x0 * self.zoom, y - y0 * self.zoom)
-                    self.mouse_down = True
-                if event.button == pygame.BUTTON_WHEELUP:
-                    # Mouse wheel up
-                    self.zoom *= (self.zoom ** 2 + self.zoom / 4 + 1) / (self.zoom ** 2 + 1)
-                if event.button == pygame.BUTTON_WHEELDOWN:
-                    # Mouse wheel down
-                    self.zoom *= (self.zoom ** 2 + 1) / (self.zoom ** 2 + self.zoom / 4 + 1)
-            elif event.type == pygame.MOUSEMOTION:
-                # Drag content
-                if self.mouse_down:
-                    x1, y1 = self.mouse_last
-                    x2, y2 = pygame.mouse.get_pos()
-                    self.offset = ((x2 - x1) / self.zoom, (y2 - y1) / self.zoom)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                self.mouse_down = False
-            # for debugging purposes, todo: remove after completion
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_1:
-                    # Zoom in on the intersection when pressing 1
-                    self.zoom = 23
-                if event.key == pygame.K_2:
-                    # Zoom out of the intersection when pressing 2
-                    self.zoom = 5
-                # if event.key == pygame.K_3:
-                #     # Speed up the simulation when pressing 3
-                #     self.sim.dt = min(self.sim.dt * 2, 0.5)
-                # if event.key == pygame.K_4:
-                #     # Slow down the simulation when pressing 4
-                #     self.sim.dt = max(self.sim.dt / 2, 0.0001)
 
     def convert(self, x, y=None):
         """Converts simulation coordinates to screen coordinates"""
