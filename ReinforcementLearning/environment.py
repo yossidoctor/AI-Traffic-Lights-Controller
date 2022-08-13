@@ -6,13 +6,14 @@ from TrafficSimulator import Window, two_way_intersection
 class Environment:
     def __init__(self):
         """ Observation space:
-        State = (closest_lead_vehicle_to_red_traffic_signal, n_vehicles_on_green_light_route,
-        n_vehicles_on_red_light_route)  # (1700 + 1) * 16 * 16 = 435,456
-        Vehicle = (vehicle.x, vehicle.v, signal_state)  # n = 50 * 17 * 2 = 1700 (+ 1 for None)
-        0 <= vehicle.x <= 49,   0 <= vehicle.v <= 16,   0 <= signal_state <= 1 """
+        State = (vehicle, n_green_route_vehicles, n_red_route_vehicles)  # 181 * 16 * 16 = 46336
+        vehicle: closest lead vehicle to a red traffic light
+        n_{color}_route_vehicles: the number of vehicles on the route with {color} traffic light
+        Vehicle = (vehicle.x, vehicle.v, signal_state)  # n = 10 * 9 * 2 + 1 (for None) = 181
+        vehicle.x: {0, 5, 10, ..., 45} (rounded down),   vehicle.v: {0, 2, 4, ..., 16},   signal_state: {0, 1} """
         self.max_gen = 30
         self.window = Window()
-        self.observation_space_size = 435456
+        self.observation_space_size = 46336
         self.action_space = [0, 1]
 
     def get_state(self) -> Tuple[Tuple, Tuple]:
