@@ -22,6 +22,9 @@ class Simulation:
         self.n_vehicles_on_map = 0
         self._waiting_time_log = []  # for vehicles that completed the journey
 
+        # TODO comment
+        self.vehicles_passed_junction = 0
+
     @property
     def completed(self) -> bool:
         """
@@ -54,6 +57,10 @@ class Simulation:
         if not self._waiting_time_log:
             return 0
         return mean(self._waiting_time_log)
+
+    def get_passed_junction(self):
+        """ TODO comment """
+        return self.vehicles_passed_junction
 
     def detect_collisions(self) -> None:
         """Detects collisions between roads in the intersections"""
@@ -98,6 +105,22 @@ class Simulation:
         for signal in self.traffic_signals:
             signal.update()
 
+    def update_vehicles(self):
+        """ TODO comment """
+        inter_list = self.intersections.keys()
+
+        for road in self.non_empty_roads:
+            # road = self.roads[road_index]
+            if road.index in inter_list:
+                for vehicle in road.vehicles:
+                    if not vehicle.is_in_junction:
+                        vehicle.is_in_junction = True
+            else:
+                for vehicle in road.vehicles:
+                    if vehicle.is_in_junction:
+                        self.vehicles_passed_junction += 1
+                        vehicle.is_in_junction = False
+
     def update(self) -> None:
         """
         Updates the non-empty roads and the vehicle generators, check roads for out of bounds vehicle,
@@ -106,6 +129,9 @@ class Simulation:
         # Update every road
         for road in self.non_empty_roads:
             road.update(self.dt, self.t)
+
+        # Update every existing vehicle
+        self.update_vehicles()
 
         # Add vehicles
         for gen in self.generators:

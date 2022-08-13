@@ -31,6 +31,8 @@ class Vehicle:
         # Used for collision detection, initial value set in vehicle.update() upon adding it to the map
         self.position: Tuple = (None, None)
 
+        self.is_in_junction = False
+
     def __str__(self):
         return f'{self.index}'
 

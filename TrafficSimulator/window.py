@@ -31,6 +31,9 @@ class Window:
         self.screen = None
         self._text_font = None
 
+    def __copy__(self):
+        return Window(self.sim)
+
     def init_display(self):
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.flip()
