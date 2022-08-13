@@ -61,21 +61,21 @@ NORTH_RIGHT_TURN = turn_road(NORTH_RIGHT, WEST_LEFT, TURN_RIGHT, n)
 NORTH_LEFT_TURN = turn_road(NORTH_RIGHT, EAST_LEFT, TURN_LEFT, n)
 
 ROADS = [
-    WEST_INBOUND,
-    SOUTH_INBOUND,
-    EAST_INBOUND,
-    NORTH_INBOUND,
+    WEST_INBOUND, # 0
+    SOUTH_INBOUND, # 1
+    EAST_INBOUND, # 2
+    NORTH_INBOUND, # 3
 
-    WEST_OUTBOUND,
-    SOUTH_OUTBOUND,
-    EAST_OUTBOUND,
-    NORTH_OUTBOUND,
+    WEST_OUTBOUND, # 4
+    SOUTH_OUTBOUND, # 5
+    EAST_OUTBOUND, # 6
+    NORTH_OUTBOUND, # 7
 
-    WEST_STRAIGHT,
-    SOUTH_STRAIGHT,
-    EAST_STRAIGHT,
-    NORTH_STRAIGHT,
-
+    WEST_STRAIGHT, # 8
+    SOUTH_STRAIGHT, # 9
+    EAST_STRAIGHT, # 10
+    NORTH_STRAIGHT, # 11
+    
     *WEST_RIGHT_TURN,
     *WEST_LEFT_TURN,
 
@@ -91,42 +91,43 @@ ROADS = [
 
 
 def turn(t): return range(t, t + n)
+# {FROM} {TURN DIRECTION} {TO}
+t12 = turn(12) # W_R_S
+t27 = turn(27) # W_L_N
+t42 = turn(42) # S_R_E
+t57 = turn(57) # S_L_W
+t72 = turn(72) # E_R_N
+t87 = turn(87) # E_L_S
+t102 = turn(102) # N_R_W
+t117 = turn(117) # N_L_E
 
 
 # Vehicle generator
 VEHICLE_RATE = 35
 PATHS = [
     [3, [0, 8, 6]],  # WEST STRAIGHT EAST
-    [1, [0, *turn(12), 5]],  # WEST RIGHT SOUTH
-    # [1, [0, *turn(12 + n), 7]],  # WEST LEFT NORTH
+    [1, [0, *t12, 5]],  # WEST RIGHT SOUTH
+    # [1, [0, *t27, 7]],  # WEST LEFT NORTH
 
     [3, [1, 9, 7]],  # SOUTH STRAIGHT NORTH
-    [1, [1, *turn(12 + 2 * n), 6]],  # SOUTH RIGHT EAST
-    # [1, [1, *turn(12 + 3 * n), 4]],  # SOUTH LEFT WEST
+    [1, [1, *t42, 6]],  # SOUTH RIGHT EAST
+    # [1, [1, *t57, 4]],  # SOUTH LEFT WEST
 
     [3, [2, 10, 4]],  # EAST STRAIGHT WEST
-    [1, [2, *turn(12 + 4 * n), 7]],  # EAST RIGHT NORTH
-    # [1, [2, *turn(12 + 5 * n), 5]],  # EAST LEFT SOUTH
+    [1, [2, *t72, 7]],  # EAST RIGHT NORTH
+    # [1, [2, *t87, 5]],  # EAST LEFT SOUTH
 
     [3, [3, 11, 5]],  # NORTH STRAIGHT SOUTH
-    [1, [3, *turn(12 + 6 * n), 4]],  # NORTH RIGHT WEST
-    # [1, [3, *turn(12 + 7 * n), 6]]  # NORTH LEFT EAST
+    [1, [3, *t102, 4]],  # NORTH RIGHT WEST
+    # [1, [3, *t117, 6]]  # NORTH LEFT EAST
 ]
 
 # Intersections
-t12 = turn(12)
-t27 = turn(27)
-t42 = turn(42)
-t57 = turn(56)
-t72 = turn(72)
-t87 = turn(87)
-t102 = turn(102)
-t117 = turn(117)
 d1 = {8: {9, 11, *t42, *t57, *t87, *t117}}
 d2 = {9: {10, *t12, *t27, *t72, *t87, *t117}}
 d3 = {10: {11, *t27, *t57, *t102, *t117}}
 d4 = {11: {*t12, *t27, *t57, *t87}}
-d5 = {road: {*t87} for road in t12}
+d5 = {road: {*t87} for road in t12} # 
 d6 = {road: {*t57, *t72, *t117} for road in t27}
 d7 = {road: {*t117} for road in t42}
 d8 = {road: {*t87, *t102} for road in t57}
