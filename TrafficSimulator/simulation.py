@@ -5,7 +5,10 @@ from typing import List, Dict, Tuple, Set, Optional
 
 from scipy.spatial import distance
 
-from TrafficSimulator import Road, VehicleGenerator, TrafficSignal, Window
+from TrafficSimulator.road import Road
+from TrafficSimulator.traffic_signal import TrafficSignal
+from TrafficSimulator.vehicle_generator import VehicleGenerator
+from TrafficSimulator.window import Window
 
 
 class Simulation:
@@ -16,18 +19,18 @@ class Simulation:
         self.generators: List[VehicleGenerator] = []
         self.traffic_signals: List[TrafficSignal] = []
 
-        self.collision_detected = False
-        self.n_vehicles_generated = 0
-        self.n_vehicles_on_map = 0
+        self.collision_detected: bool = False
+        self.n_vehicles_generated: int = 0
+        self.n_vehicles_on_map: int = 0
 
         self._gui: Optional[Window] = None
         self._non_empty_roads: Set[int] = set()
         self._intersections: Dict[int, Set[int]] = {}  # {Road index: [intersecting roads' indexes]}
         self._max_gen: Optional[int] = max_gen  # Vehicle generation limit
-        self._waiting_times: List = []  # for vehicles that completed the journey
+        self._waiting_times: List[float] = []  # for vehicles that completed the journey
 
     @property
-    def gui_closed(self):
+    def gui_closed(self) -> bool:
         return self._gui and self._gui.closed
 
     @property
@@ -59,33 +62,42 @@ class Simulation:
         return output
 
     def init_gui(self) -> None:
+        """ Initializes the GUI and updates the display """
         if not self._gui:
             self._gui = Window(self)
         self._gui.update()
 
-    def _loop(self, steps: int) -> None:
-        for _ in range(steps):
+    def _loop(self, n: int) -> None:
+        """ Performs n simulation updates. Terminates early upon completion or GUI closing"""
+        for _ in range(n):
             self.update()
             if self.completed or self.gui_closed:
                 return
 
-    def run(self, action: None, steps: int = 200) -> None:
+    def run(self, action: None, n: int = 200) -> None:
+        """ Performs n simulation updates. Terminates early upon completion or GUI closing
+        :param n: the number of simulation updates to perform, 200 by default
+        :param action: an action from a reinforcement learning environment action space
+        """
         if action:
-            self.update_signals()
+            self._update_signals()
             self._loop(200)
             if self.completed or self.gui_closed:
                 return
-            self.update_signals()
-        self._loop(steps)  # Todo: set 100 for fixed cycle
+            self._update_signals()
+        self._loop(n)  # Todo: set 100 for fixed cycle
 
     def get_average_wait_time(self) -> float:
+        """ Returns the average wait time of vehicles
+        that completed the journey and aren't on the map """
         if not self._waiting_times:
             return 0
         return mean(self._waiting_times)
 
     def detect_collisions(self) -> None:
+        """ Detects collisions by checking all non-empty intersecting vehicle paths.
+        Updates the self.collision_detected attribute """
         radius = 2
-        # Transform the intersections' dict to {vehicles: [possibly intersecting vehicles]}
         for main_road, intersecting_roads in self.intersections.items():
             vehicles = self.roads[main_road].vehicles
             intersecting_vehicles = chain.from_iterable(
@@ -119,7 +131,7 @@ class Simulation:
         traffic_signal = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
         self.traffic_signals.append(traffic_signal)
 
-    def update_signals(self) -> None:
+    def _update_signals(self) -> None:
         for traffic_signal in self.traffic_signals:
             traffic_signal.update()
 
@@ -179,5 +191,6 @@ class Simulation:
         # Increment time
         self.t += self.dt
 
+        # Update the display
         if self._gui:
             self._gui.update()

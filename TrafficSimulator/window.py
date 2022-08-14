@@ -3,7 +3,7 @@ import pygame
 from pygame.draw import polygon
 
 # For debugging purposes, todo comment-out before project submission
-DRAW_VEHICLE_IDS = True
+DRAW_VEHICLE_IDS = False
 DRAW_ROAD_IDS = False
 # DRAW_GRIDLINES = True
 FILL_POLYGONS = True
@@ -11,8 +11,6 @@ FILL_POLYGONS = True
 
 class Window:
     def __init__(self, simulation):
-        self._sim = simulation
-        self.closed = False
         self._width = 900
         self._height = 700
         self._screen = pygame.display.set_mode((self._width, self._height))
@@ -20,6 +18,8 @@ class Window:
         pygame.font.init()
         font = f'Lucida Console'
         self._text_font = pygame.font.SysFont(font, 16)
+        self.closed = False
+        self._sim = simulation
         self._zoom = 5
         self._offset = (0, 0)
         self._mouse_last = (0, 0)
@@ -136,6 +136,7 @@ class Window:
     #         line(self.screen, self.convert((x_start, unit * i)), self.convert((x_end, unit * i)), color)
 
     def _draw_roads(self):
+        road_index_coords = []
         for road in self._sim.roads:
             # Draw road background
             screen_x, screen_y = self._rotated_box(
@@ -147,10 +148,8 @@ class Window:
                 centered=False
             )
 
-            if DRAW_ROAD_IDS:
-                # For debugging purposes, todo comment-out before project submission
-                text_road_index = self._text_font.render(f'{road.index}', True, (0, 0, 0))
-                self._screen.blit(text_road_index, (screen_x, screen_y))
+            # For debugging purposes, todo comment-out before project submission
+            road_index_coords.append((road.index, screen_x, screen_y))
 
             # Draw road arrow
             if road.length > 5:
@@ -158,6 +157,11 @@ class Window:
                     pos = (road.start[0] + (road.length / 2 + i + 3) * road.angle_cos,
                            road.start[1] + (road.length / 2 + i + 3) * road.angle_sin)
                     self._draw_arrow(pos, (-1.25, 0.2), cos=road.angle_cos, sin=road.angle_sin)
+        if DRAW_ROAD_IDS:
+            # For debugging purposes, todo comment-out before project submission
+            for cords in road_index_coords:
+                text_road_index = self._text_font.render(f'{cords[0]}', True, (0, 0, 0))
+                self._screen.blit(text_road_index, (cords[1] - 5, cords[2] - 5))
 
     def _draw_vehicle(self, vehicle, road):
         l, h = vehicle.length, vehicle.width

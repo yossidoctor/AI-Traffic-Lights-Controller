@@ -32,7 +32,7 @@ class Vehicle:
         self.position: Tuple = (None, None)
 
     def __str__(self):
-        return f'{self.index}'
+        return f'Vehicle {self.index}'
 
     def get_total_waiting_time(self, sim_t):
         if self.is_stopped:

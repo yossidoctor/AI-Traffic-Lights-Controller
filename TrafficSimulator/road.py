@@ -7,29 +7,28 @@ from TrafficSimulator.vehicle import Vehicle
 
 
 class Road:
-    def __init__(self, start, end, index):
-        self.start = start
-        self.end = end
-        self.index = index
+    def __init__(self, start: int, end: int, index: int):
+        self.start: int = start
+        self.end: int = end
+        self.index: int = index
 
         self.vehicles: Deque[Vehicle] = deque()
 
-        self.length = distance.euclidean(self.start, self.end)
-        self.angle_sin = (self.end[1] - self.start[1]) / self.length
-        self.angle_cos = (self.end[0] - self.start[0]) / self.length
-        self.has_traffic_signal = False
+        self.length: float = distance.euclidean(self.start, self.end)
+        self.angle_sin: float = (self.end[1] - self.start[1]) / self.length
+        self.angle_cos: float = (self.end[0] - self.start[0]) / self.length
 
+        self.has_traffic_signal = False
         self.traffic_signal = None
         self.traffic_signal_group = None
-        self.has_traffic_signal = False
 
     def set_traffic_signal(self, signal, group):
+        self.has_traffic_signal = True
         self.traffic_signal = signal
         self.traffic_signal_group = group
-        self.has_traffic_signal = True
 
     def __str__(self):
-        return f'{self.index}'
+        return f'Road {self.index}'
 
     @property
     def traffic_signal_state(self):
