@@ -7,10 +7,13 @@ from TrafficSimulator import Vehicle, Road
 
 class VehicleGenerator:
     def __init__(self, vehicle_rate, paths: List[List], inbound_roads: Dict[int, Road]):
-        self._inbound_roads: Dict[int: Road] = inbound_roads
         self._vehicle_rate = vehicle_rate
         self._paths: List[List] = paths
-        self._last_added_time = 0
+        self._prev_gen_time = 0
+
+        # Storing the list of the first roads of the vehicle paths. Used in the update() function
+        # upon vehicle generation to check if there's sufficient space in the road to add a vehicle
+        self._inbound_roads: Dict[int: Road] = inbound_roads
 
     def _generate_vehicle(self):
         """Returns a random vehicle from self.vehicles with random proportions"""
@@ -21,21 +24,20 @@ class VehicleGenerator:
             if r <= 0:
                 return Vehicle(path)
 
-    def update(self, sim_t, n_vehicles_generated):
+    def update(self, curr_t, n_vehicles_generated):
         """Generates a vehicle if the generation conditions are satisfied
         :return: road index if a vehicle was generated, else None
         """
         # If there's no vehicles on the map, or if the time elapsed after last
         # generation is greater than the vehicle rate, generate a vehicle
-        time_elapsed = sim_t - self._last_added_time >= 60 / self._vehicle_rate
-        if (not n_vehicles_generated) or time_elapsed:
+        time_elapsed = curr_t - self._prev_gen_time >= 60 / self._vehicle_rate
+        if not n_vehicles_generated or time_elapsed:
             vehicle: Vehicle = self._generate_vehicle()
             road: Road = self._inbound_roads[vehicle.path[0]]
-            # If the road is empty, or there's enough space for the generated vehicle, add it
+            # If the road is empty, or there's sufficient space for the generated vehicle, add it
             if not road.vehicles or road.vehicles[-1].x > vehicle.s0 + vehicle.length:
                 vehicle.index = n_vehicles_generated
-                # vehicle.position = road.start
                 road.vehicles.append(vehicle)
-                self._last_added_time = sim_t
+                self._prev_gen_time = curr_t
                 return road.index
         return None

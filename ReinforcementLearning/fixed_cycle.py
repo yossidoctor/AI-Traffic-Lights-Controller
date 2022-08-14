@@ -1,15 +1,15 @@
-from ReinforcementLearning import Environment
+from ReinforcementLearning import EnvironmentOne
 
 
 def fixed_cycle_action(sim):
-    time_elapsed = sim.t - sim.traffic_signals[0].last_update_t >= 20
+    time_elapsed = sim.t - sim.traffic_signals[0].prev_update_time >= 20
     if time_elapsed:
-        sim.traffic_signals[0].last_update_t = sim.t
+        sim.traffic_signals[0].prev_update_time = sim.t
     return time_elapsed
 
 
 def fixed_cycle_simulation(n_episodes):
-    env = Environment()
+    env: EnvironmentOne = EnvironmentOne()
     total_scores, total_wait_time, total_collisions = 0, 0, 0
 
     for episode in range(1, n_episodes + 1):
@@ -20,19 +20,19 @@ def fixed_cycle_simulation(n_episodes):
 
         while not done:
             # env.render()
-            action = fixed_cycle_action(env.window.sim)
+            action = fixed_cycle_action(env.sim)
             n_state, reward, done, truncated = env.step(action)
             if truncated:
                 return
             score += reward
-            collision_detected = env.window.sim.collision_detected
+            collision_detected = env.sim.collision_detected
 
-        wait_time = env.window.sim.get_average_wait_time()
+        wait_time = env.sim.get_average_wait_time()
         print(f"Episode {episode} - Score: {score} - Wait time: "
               f"{wait_time:.2f} -- Collisions: {int(collision_detected)}")
 
         total_scores += score
-        total_wait_time += env.window.sim.get_average_wait_time()
+        total_wait_time += env.sim.get_average_wait_time()
         total_collisions += collision_detected
 
     print(f"\nResults after {n_episodes} episodes: -- ")

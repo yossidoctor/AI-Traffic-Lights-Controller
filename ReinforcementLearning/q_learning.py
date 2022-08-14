@@ -1,4 +1,4 @@
-from ReinforcementLearning import Environment, QLearningAgent
+from ReinforcementLearning import EnvironmentOne, QLearningAgent
 
 # Hyper-parameters
 alpha = 0.1
@@ -32,7 +32,7 @@ def train_agent(q_agent, env, path, n_episodes, render=False):
             action = q_agent.get_action(state)
             new_state, reward, done, truncated = env.step(action)
             if truncated:
-                return
+                exit()
             q_agent.update(state, action, new_state, reward)
             state = new_state
             score += reward
@@ -58,12 +58,12 @@ def validate_agent(q_agent, env, n_episodes, render=False):
             action = q_agent.get_action(state)
             next_state, reward, done, truncated = env.step(action)
             if truncated:
-                return
+                exit()
             state = next_state
             score += reward
-            collision_detected = env.window.sim.collision_detected
+            collision_detected = env.sim.collision_detected
 
-        wait_time = env.window.sim.get_average_wait_time()
+        wait_time = env.sim.get_average_wait_time()
         total_scores += score
         total_wait_time += wait_time
         total_collisions += collision_detected
@@ -77,7 +77,7 @@ def validate_agent(q_agent, env, n_episodes, render=False):
 
 
 if __name__ == '__main__':
-    env: Environment = Environment()
+    env: EnvironmentOne = EnvironmentOne()
     actions = env.action_space
     q_agent = QLearningAgent(alpha=alpha, epsilon=epsilon, discount=discount, actions=actions)
     # n_train_episodes = env.observation_space_size * len(actions)  # observation space size

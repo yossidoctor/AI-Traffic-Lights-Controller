@@ -146,7 +146,7 @@ INTERSECTIONS_DICT = {
 }
 
 # Signals
-SIGNALS = [[0, 2], [1, 3]]  # WEST, EAST, SOUTH NORTH
+SIGNAL_ROADS = [[0, 2], [1, 3]]  # WEST, EAST, SOUTH NORTH
 CYCLE = [(False, True), (False, False), (True, False), (False, False)]
 SLOW_DISTANCE = 50
 SLOW_FACTOR = 0.4
@@ -155,8 +155,8 @@ STOP_DISTANCE = 15
 
 def two_way_intersection(max_gen=None):
     sim = Simulation(max_gen)
-    sim.create_roads(ROADS)
-    sim.create_gen(VEHICLE_RATE, PATHS)
-    sim.create_signal(SIGNALS, CYCLE, SLOW_DISTANCE, SLOW_FACTOR, STOP_DISTANCE)
-    sim.create_intersections(INTERSECTIONS_DICT)
+    sim.add_roads(ROADS)
+    sim.add_generator(VEHICLE_RATE, PATHS)
+    sim.add_traffic_signal(SIGNAL_ROADS, CYCLE, SLOW_DISTANCE, SLOW_FACTOR, STOP_DISTANCE)
+    sim.add_intersections(INTERSECTIONS_DICT)
     return sim
