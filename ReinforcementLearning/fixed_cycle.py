@@ -10,30 +10,40 @@ def fixed_cycle_action(sim):
 
 def fixed_cycle_simulation(n_episodes):
     env = Environment()
-    total_scores, total_wait_time = 0, 0
+    total_scores, total_wait_time, total_collisions = 0, 0, 0
 
     for episode in range(1, n_episodes + 1):
-        n_state = env.reset()
+        state = env.reset()
         score = 0
+        collision_detected = 0
         done = False
 
         while not done:
-            env.render()
+            # env.render()
             action = fixed_cycle_action(env.window.sim)
             n_state, reward, done, truncated = env.step(action)
             if truncated:
                 return
             score += reward
+            collision_detected = env.window.sim.collision_detected
 
-        print(f'Episode {episode} - Score:{score}')
+        wait_time = env.window.sim.get_average_wait_time()
+        print(f"Episode {episode} - Score: {score} - Wait time: "
+              f"{wait_time:.2f} -- Collisions: {int(collision_detected)}")
 
         total_scores += score
         total_wait_time += env.window.sim.get_average_wait_time()
+        total_collisions += collision_detected
 
-    print(f"Results after {n_episodes} episodes:")
+    print(f"\nResults after {n_episodes} episodes: -- ")
     print(f"Average score per episode: {total_scores / n_episodes:.2f}")
     print(f"Average wait time per episode: {total_wait_time / n_episodes:.2f}")
+    print(f"Average collisions per episode: {total_collisions / n_episodes:.2f}")
 
 
 if __name__ == '__main__':
-    fixed_cycle_simulation(n_episodes=100)
+    fixed_cycle_simulation(n_episodes=500)
+
+# 500 eps
+# Average wait time per episode: 3.56
+# Average collisions per episode: 0.02
