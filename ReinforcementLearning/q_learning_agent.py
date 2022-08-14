@@ -24,8 +24,8 @@ class QLearningAgent:
           Compute the best action to take in a state. If there are no legal 
           actions, which is the case at the terminal state, returns None.
         """
-        action_vals = [(action, self.get_qvalue(state, action)) for action in range(self.actions)]
-        max_val = max([self.get_qvalue(state, action) for action in range(self.actions)])
+        action_vals = [(action, self.get_qvalue(state, action)) for action in self.actions]
+        max_val = max([self.get_qvalue(state, action) for action in self.actions])
         best_actions = [action for action, val in action_vals if val == max_val]
         return random.choice(best_actions)
 

@@ -19,6 +19,7 @@ class Simulation:
         self.non_empty_roads: Set[int] = set()
 
         self._intersections: Dict[int, Set[int]] = {}  # {Road index: [intersecting roads' indexes]}
+        # self.vehicles_passed = 0  # For environment usage
         self.collision_detected = False
         self._max_gen = max_gen  # Limits the amount of cars generated in a single simulation
         self.n_vehicles_generated = 0
@@ -59,7 +60,7 @@ class Simulation:
 
     def detect_collisions(self) -> None:
         """Detects collisions between roads in the intersections"""
-        radius = 3
+        radius = 2
         # Transform the intersections' dict to {vehicles: [possibly intersecting vehicles]}
         for road, intersecting_roads in self.intersections.items():
             vehicles = self.roads[road].vehicles
@@ -72,7 +73,7 @@ class Simulation:
                         return
 
     def create_intersections(self, intersections_dict):
-        self._intersections = self._intersections | intersections_dict
+        self._intersections |= intersections_dict
 
     def create_road(self, start, end):
         road = Road(start, end, index=len(self.roads))
@@ -128,6 +129,12 @@ class Simulation:
             lead = road.vehicles[0]
             # If first vehicle is out of road bounds
             if lead.x >= road.length:
+
+                # roads_with_signal = set(signal.roads_indexes for signal in self.traffic_signals)
+                # if road.index in roads_with_signal:
+                #     # Vehicle passed a green light, entering the intersection
+                #     self.vehicles_passed += 1
+
                 # If vehicle has a next road
                 if lead.current_road_index + 1 < len(lead.path):
                     # Update current road to next road

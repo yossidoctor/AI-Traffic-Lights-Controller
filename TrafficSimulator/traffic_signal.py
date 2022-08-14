@@ -1,6 +1,10 @@
+from itertools import chain
+
+
 class TrafficSignal:
     def __init__(self, roads, cycle, slow_distance, slow_factor, stop_distance):
         self.roads = roads
+        self.roads_indexes = set(road.index for road in chain.from_iterable(roads))
         self.cycle = cycle
         self.current_cycle_index = 0
         self.slow_distance = slow_distance

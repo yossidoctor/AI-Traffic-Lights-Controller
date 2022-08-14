@@ -19,12 +19,11 @@ class Window:
         self.width = 900
         self.height = 700
 
-        self.fps = 60
-        self.zoom = 5
-        self.offset = (0, 0)
+        self._zoom = 5
+        self._offset = (0, 0)
 
-        self.mouse_last = (0, 0)
-        self.mouse_down = False
+        self._mouse_last = (0, 0)
+        self._mouse_down = False
 
         self.closed = False
 
@@ -35,9 +34,6 @@ class Window:
         # Create a pygame window
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.flip()
-        
-        # Fixed fps
-        clock = pygame.time.Clock()
 
         # To draw text
         pygame.font.init()
@@ -47,40 +43,39 @@ class Window:
         if self.screen:  # sanity check
             self.draw_simulation()
             pygame.display.update()
-            clock.tick(self.fps)
-            
+
             for event in pygame.event.get():
-            # Quit program if window is closed
-            if event.type == pygame.QUIT:
-                self.closed = True
-            # Handle mouse events
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                # If mouse button down
-                if event.button == pygame.BUTTON_LEFT:
-                    # Left click
-                    x, y = pygame.mouse.get_pos()
-                    x0, y0 = self.offset
-                    self.mouse_last = (x - x0 * self.zoom, y - y0 * self.zoom)
-                    self.mouse_down = True
-                if event.button == pygame.BUTTON_WHEELUP:
-                    # Mouse wheel up
-                    self.zoom *= (self.zoom ** 2 + self.zoom / 4 + 1) / (self.zoom ** 2 + 1)
-                if event.button == pygame.BUTTON_WHEELDOWN:
-                    # Mouse wheel down
-                    self.zoom *= (self.zoom ** 2 + 1) / (self.zoom ** 2 + self.zoom / 4 + 1)
-            elif event.type == pygame.MOUSEMOTION:
-                # Drag content
-                if self.mouse_down:
-                    x1, y1 = self.mouse_last
-                    x2, y2 = pygame.mouse.get_pos()
-                    self.offset = ((x2 - x1) / self.zoom, (y2 - y1) / self.zoom)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                self.mouse_down = False
+                # Quit program if window is closed
+                if event.type == pygame.QUIT:
+                    self.closed = True
+                # Handle mouse events
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    # If mouse button down
+                    if event.button == pygame.BUTTON_LEFT:
+                        # Left click
+                        x, y = pygame.mouse.get_pos()
+                        x0, y0 = self._offset
+                        self._mouse_last = (x - x0 * self._zoom, y - y0 * self._zoom)
+                        self._mouse_down = True
+                    if event.button == pygame.BUTTON_WHEELUP:
+                        # Mouse wheel up
+                        self._zoom *= (self._zoom ** 2 + self._zoom / 4 + 1) / (self._zoom ** 2 + 1)
+                    if event.button == pygame.BUTTON_WHEELDOWN:
+                        # Mouse wheel down
+                        self._zoom *= (self._zoom ** 2 + 1) / (self._zoom ** 2 + self._zoom / 4 + 1)
+                elif event.type == pygame.MOUSEMOTION:
+                    # Drag content
+                    if self._mouse_down:
+                        x1, y1 = self._mouse_last
+                        x2, y2 = pygame.mouse.get_pos()
+                        self._offset = ((x2 - x1) / self._zoom, (y2 - y1) / self._zoom)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    self._mouse_down = False
 
     def _loop(self, steps):
         for _ in range(steps):
             self.sim.update()
-            if self.screen and _ % 2:  # Update the display every other sim update
+            if self.screen:  # Update the display every 4th sim update
                 self.update_screen()
             if self.closed or self.sim.completed:
                 return
@@ -93,22 +88,11 @@ class Window:
         """
         if action:
             self.sim.update_signals()
-            if self.screen:
-                self.update_screen()
+            self._loop(180)
             if self.closed or self.sim.completed:
                 return
-
-            self._loop(self.fps * 3)
-            if self.closed or self.sim.completed:
-                return
-
             self.sim.update_signals()
-            if self.screen:
-                self.update_screen()
-            if self.closed or self.sim.completed:
-                return
-
-        self._loop(self.fps * 3)
+        self._loop(180)
 
     def convert(self, x, y=None):
         """Converts simulation coordinates to screen coordinates"""
@@ -116,8 +100,8 @@ class Window:
             return [self.convert(e[0], e[1]) for e in x]
         if isinstance(x, tuple):
             return self.convert(*x)
-        return (int(self.width / 2 + (x + self.offset[0]) * self.zoom),
-                int(self.height / 2 + (y + self.offset[1]) * self.zoom))
+        return (int(self.width / 2 + (x + self._offset[0]) * self._zoom),
+                int(self.height / 2 + (y + self._offset[1]) * self._zoom))
 
     def inverse_convert(self, x, y=None):
         """Converts screen coordinates to simulation coordinates"""
@@ -125,8 +109,8 @@ class Window:
             return [self.convert(e[0], e[1]) for e in x]
         if isinstance(x, tuple):
             return self.convert(*x)
-        return (int(-self.offset[0] + (x - self.width / 2) / self.zoom),
-                int(-self.offset[1] + (y - self.height / 2) / self.zoom))
+        return (int(-self._offset[0] + (x - self.width / 2) / self._zoom),
+                int(-self._offset[1] + (y - self.height / 2) / self._zoom))
 
     def rotated_box(self, pos, size, angle=None, cos=None, sin=None, centered=True,
                     color=(0, 0, 255)):

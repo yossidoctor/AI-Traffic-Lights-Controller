@@ -81,9 +81,9 @@ if __name__ == '__main__':
     actions = env.action_space
     q_agent = QLearningAgent(alpha=alpha, epsilon=epsilon, discount=discount, actions=actions)
     # n_train_episodes = env.observation_space_size  # observation space size
-    n_train_episodes = 10
+    n_train_episodes = 1000
     n_eval_episodes = 10
     file_name = f'ep{n_train_episodes}_a{alpha}_e{epsilon}_d{discount}_m{env.max_gen}.txt'
-    train_agent(q_agent, env, file_name, n_episodes=n_train_episodes, render=False)
+    # train_agent(q_agent, env, file_name, n_episodes=n_train_episodes, render=False)
     q_agent.q_values = eval(get_q_values(file_name))
-    validate_agent(q_agent, env, n_episodes=n_eval_episodes, render=False)
+    validate_agent(q_agent, env, n_episodes=n_eval_episodes, render=True)
