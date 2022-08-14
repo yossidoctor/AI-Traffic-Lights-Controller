@@ -46,7 +46,7 @@ def train_agent(q_agent, env, path, n_episodes, render=False):
 def validate_agent(q_agent, env, n_episodes, render=False):
     print(f"\n -- Evaluating agent for {n_episodes} episodes -- ")
     total_scores, total_wait_time, total_collisions = 0, 0, 0
-    for n_episode in range(n_episodes):
+    for n_episode in range(1, n_episodes + 1):
         state = env.reset()
         score = 0
         collision_detected = 0
@@ -80,10 +80,10 @@ if __name__ == '__main__':
     env: Environment = Environment()
     actions = env.action_space
     q_agent = QLearningAgent(alpha=alpha, epsilon=epsilon, discount=discount, actions=actions)
-    # n_train_episodes = env.observation_space_size  # observation space size
-    n_train_episodes = 1000
+    # n_train_episodes = env.observation_space_size * len(actions)  # observation space size
+    n_train_episodes = 10
     n_eval_episodes = 10
     file_name = f'ep{n_train_episodes}_a{alpha}_e{epsilon}_d{discount}_m{env.max_gen}.txt'
-    # train_agent(q_agent, env, file_name, n_episodes=n_train_episodes, render=False)
+    train_agent(q_agent, env, file_name, n_episodes=n_train_episodes, render=False)
     q_agent.q_values = eval(get_q_values(file_name))
-    validate_agent(q_agent, env, n_episodes=n_eval_episodes, render=True)
+    validate_agent(q_agent, env, n_episodes=n_eval_episodes, render=False)

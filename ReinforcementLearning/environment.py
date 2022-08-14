@@ -1,6 +1,4 @@
 import math
-from collections import deque
-from copy import deepcopy
 from typing import Tuple
 
 from TrafficSimulator import Window, two_way_intersection
@@ -12,7 +10,7 @@ class Environment:
         State = (vehicle, n_green_route_vehicles, n_red_route_vehicles)  # 171 * 16 * 16 = 43776
         vehicle: closest lead vehicle to a red traffic light
         n_{color}_route_vehicles: the number of vehicles on the route with {color} traffic light
-        Vehicle = (vehicle.x, vehicle.v, signal_state)  # n = 10 * 17 + 1 (for None) = 171
+        Vehicle = (vehicle.x, vehicle.v)  # n = 10 * 17 + 1 (for None) = 171
         vehicle.x: {0, 5, 10, ..., 45} (rounded down), vehicle.v: {1, 2, 3, ..., 17}"""
         self.max_gen = 30
         self.window = Window()
@@ -20,9 +18,8 @@ class Environment:
         self.action_space = [0, 1]
         self._vehicles_to_pass = 0  # Vehicles on inbound roads
 
-    def get_state(self, init=False) -> Tuple[Tuple, int, int]:
-        # todo: documentation
-        if init:
+    def get_state(self, reset=False) -> Tuple[Tuple, int, int]:
+        if reset:
             # return initial state
             return (None, None), 0, 0
         n_green_route_vehicles = 0
@@ -60,6 +57,9 @@ class Environment:
 
         step_reward = self.get_reward(new_state)
 
+        # Set the number of vehicles on inbound roads in the new state
+        self._vehicles_to_pass = new_state[1], new_state[2]
+
         # Whether a terminal state (as defined under the MDP of the task) is reached.
         terminated = self.window.sim.completed
 
@@ -72,12 +72,14 @@ class Environment:
     def get_reward(self, state):
         vehicle, n_green_route_vehicles, n_red_route_vehicles = state
         collision_factor = -50 * self.window.sim.collision_detected  # high-weighted negative reward
-        high_risk_factor = -10 * self._lead_unable_to_brake()  # low-weighted negative reward
+        # high_risk_factor = -10 * int(self._lead_unable_to_brake())  # low-weighted negative reward
 
         # Check whether the flow change is positive or negative using the difference in the number
         # of vehicles in the inbound roads from the previous state - low-weighted positive reward
         flow_change = self._vehicles_to_pass - (n_green_route_vehicles + n_red_route_vehicles)
-        reward = collision_factor + high_risk_factor + flow_change
+
+        # reward = collision_factor + high_risk_factor + flow_change
+        reward = collision_factor + flow_change
         return reward
 
     def render(self):
@@ -87,33 +89,38 @@ class Environment:
 
     def reset(self):
         self.window.sim = two_way_intersection(self.max_gen)
-        init_state = self.get_state(init=True)
+        init_state = self.get_state(reset=True)
         self._vehicles_to_pass = 0
         return init_state
 
-    def _lead_unable_to_brake(self):
-        # Create new copies of non-empty roads, each containing only its the first vehicle
-        # (in case it's not in the safe_zone_stop)
-        safe_stop_zone = 3
-        red_light_roads = []
-        # todo: bad implementation of getting roads with traffic signal
-        #  get with traffic signal road groups
-        for signal in self.window.sim.traffic_signals:
-            for i in signal.roads_indexes:
-                road = self.window.sim.roads[i]
-                if not road.traffic_signal_state and road.vehicles and \
-                        road.vehicles[0].x > safe_stop_zone:
-                    new_road = deepcopy(road)
-                    new_road.vehicles = deque[road.vehicles[0]]  # todo: validate
-        if not red_light_roads:
-            return False
-        t, dt = self.window.sim.t, self.window.sim.dt  # Set local time variables
-        # Simulate a single step
-        for road in red_light_roads:
-            for _ in range(180):
-                road.update(dt, t)
-                if road.vehicles[0].x > road.length:
-                    # Vehicle passed the traffic signal, meaning it can't brake successfully
-                    return True
-                t += dt
-        return False
+    # def _lead_unable_to_brake(self):
+    #     # Create new copies of non-empty roads, each containing only its the first vehicle
+    #     # (in case it's not in the safe_zone_stop)
+    #     safe_stop_zone = 3
+    #     red_light_roads = []
+    #     # todo: bad implementation of getting roads with traffic signal
+    #     #  get with traffic signal road groups
+    #     for signal in self.window.sim.traffic_signals:
+    #         for i in signal.roads_indexes:
+    #             road = self.window.sim.roads[i]
+    #             if not road.traffic_signal_state and road.vehicles and \
+    #                     road.vehicles[0].x > safe_stop_zone:
+    #                 new_road = deepcopy(road)
+    #                 while len(new_road.vehicles) > 1:
+    #                     new_road.vehicles.pop()
+    #                 red_light_roads.append(new_road)
+    #     if not red_light_roads:
+    #         return False
+    #     t, dt = self.window.sim.t, self.window.sim.dt  # Set local time variables
+    #     # Simulate a single step
+    #     for road in red_light_roads:
+    #         init = road.vehicles[0].index, round(road.vehicles[0].x, 2), round(road.vehicles[0].v,
+    #                                                                            2)
+    #         for _ in range(180):
+    #             road.update(dt, t)
+    #             if road.vehicles[0].x > road.length:
+    #                 print(init)
+    #                 # Vehicle passed the traffic signal, meaning it can't brake successfully
+    #                 return True
+    #             t += dt
+    #     return False

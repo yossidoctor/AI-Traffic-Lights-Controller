@@ -33,6 +33,7 @@ class Road:
 
     @property
     def traffic_signal_state(self):
+        """ Returns the traffic signal state if the road has a traffic signal, else True"""
         if self.has_traffic_signal:
             i = self.traffic_signal_group
             return self.traffic_signal.current_cycle[i]
