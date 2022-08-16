@@ -1,4 +1,3 @@
-from copy import deepcopy
 from itertools import chain
 from statistics import mean
 from typing import List, Dict, Tuple, Set, Optional
@@ -152,7 +151,7 @@ class Simulation:
 
         # Check roads for out-of-bounds vehicle
         new_non_empty_roads = set()
-        empty_roads = set()
+        new_empty_roads = set()
         for i in self._non_empty_roads:
             road = self.roads[i]
             lead = road.vehicles[0]
@@ -160,31 +159,30 @@ class Simulation:
             if lead.x >= road.length:
                 # If vehicle has a next road
                 if lead.current_road_index + 1 < len(lead.path):
-                    # Update current road to next road
-                    lead.current_road_index += 1
-                    # Create a copy and reset some vehicle properties
-                    new_vehicle = deepcopy(lead)
-                    new_vehicle.x = 0
-                    # Add it to the next road
-                    next_road_index = lead.path[lead.current_road_index]
-                    new_non_empty_roads.add(next_road_index)
-                    self.roads[next_road_index].vehicles.append(new_vehicle)
                     # Remove it from its road
                     road.vehicles.popleft()
+                    # Reset the position relative to the road
+                    lead.x = 0
+                    # Add it to the next road
+                    lead.current_road_index += 1
+                    next_road_index = lead.path[lead.current_road_index]
+                    new_non_empty_roads.add(next_road_index)
+                    self.roads[next_road_index].vehicles.append(lead)
+                    # road.vehicles.popleft()
                     if not road.vehicles:
-                        empty_roads.add(road.index)
+                        new_empty_roads.add(road.index)
                 else:
                     # Remove it from its road
-                    removed_vehicle = road.vehicles.popleft()
+                    road.vehicles.popleft()
                     # Remove from non_empty_roads if it has no vehicles
                     if not road.vehicles:
-                        empty_roads.add(road.index)
+                        new_empty_roads.add(road.index)
                     self.n_vehicles_on_map -= 1
                     # Update the log
-                    wait_time = removed_vehicle.get_total_waiting_time(self.t)
+                    wait_time = lead.get_total_waiting_time(self.t)
                     self._waiting_times.append(wait_time)
 
-        self._non_empty_roads -= empty_roads
+        self._non_empty_roads -= new_empty_roads
         self._non_empty_roads |= new_non_empty_roads
         self.detect_collisions()
 
