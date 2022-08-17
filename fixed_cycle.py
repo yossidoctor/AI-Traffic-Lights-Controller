@@ -1,15 +1,19 @@
-from ReinforcementLearning import EnvironmentOne
+from ReinforcementLearning import Environment
+from TrafficSimulator import Simulation
 
 
-def fixed_cycle_action(sim):
-    time_elapsed = sim.t - sim.traffic_signals[0].prev_update_time >= 20
+# todo: move to utils, with LQF
+def fixed_cycle_action(sim: Simulation) -> bool:
+    """ Returns a boolean indicating to take an action
+    if the enough time elapsed since previous action """
+    time_elapsed: bool = sim.t - sim.traffic_signals[0].prev_update_time >= 20
     if time_elapsed:
         sim.traffic_signals[0].prev_update_time = sim.t
     return time_elapsed
 
 
-def fixed_cycle_simulation(n_episodes):
-    env: EnvironmentOne = EnvironmentOne()
+def fixed_cycle_simulation(n_episodes: int):
+    env: Environment = Environment()
     total_scores, total_wait_time, total_collisions = 0, 0, 0
 
     for episode in range(1, n_episodes + 1):
@@ -19,11 +23,10 @@ def fixed_cycle_simulation(n_episodes):
         done = False
 
         while not done:
-            # env.render()
             action = fixed_cycle_action(env.sim)
             n_state, reward, done, truncated = env.step(action)
             if truncated:
-                return
+                exit()
             score += reward
             collision_detected = env.sim.collision_detected
 
@@ -42,7 +45,7 @@ def fixed_cycle_simulation(n_episodes):
 
 
 if __name__ == '__main__':
-    fixed_cycle_simulation(n_episodes=500)
+    fixed_cycle_simulation(n_episodes=1000)
 
 # 500 eps
 # Average wait time per episode: 3.56

@@ -30,10 +30,12 @@ class Simulation:
 
     @property
     def gui_closed(self) -> bool:
+        """ Returns an indicator whether the GUI was closed """
         return self._gui and self._gui.closed
 
     @property
     def non_empty_roads(self) -> Set[int]:
+        """ Returns a set of non-empty road indexes """
         return self._non_empty_roads
 
     @property
@@ -41,9 +43,9 @@ class Simulation:
         """
         Whether a terminal state (as defined under the MDP of the task) is reached.
         """
-        reached_limit = self._max_gen and self.n_vehicles_generated == self._max_gen and \
-                        not self.n_vehicles_on_map
-        return self.collision_detected or reached_limit
+        if self._max_gen:
+            return self.n_vehicles_generated == self._max_gen and not self.n_vehicles_on_map
+        return self.collision_detected
 
     @property
     def intersections(self) -> Dict[int, Set[int]]:
@@ -73,18 +75,18 @@ class Simulation:
             if self.completed or self.gui_closed:
                 return
 
-    def run(self, action: None, n: int = 200) -> None:
+    def run(self, action: None, n: int = 180) -> None:
         """ Performs n simulation updates. Terminates early upon completion or GUI closing
         :param n: the number of simulation updates to perform, 200 by default
         :param action: an action from a reinforcement learning environment action space
         """
         if action:
             self._update_signals()
-            self._loop(200)
+            self._loop(180)  # 3 simulation seconds
             if self.completed or self.gui_closed:
                 return
             self._update_signals()
-        self._loop(n)  # Todo: set 100 for fixed cycle
+        self._loop(n)  # TODO: set 100 for fixed cycle
 
     def get_average_wait_time(self) -> float:
         """ Returns the average wait time of vehicles
@@ -108,7 +110,7 @@ class Simulation:
                         return
 
     def add_intersections(self, intersections_dict: Dict[int, Set[int]]) -> None:
-        self._intersections |= intersections_dict
+        self._intersections.update(intersections_dict)
 
     def add_road(self, start: int, end: int) -> None:
         road = Road(start, end, index=len(self.roads))
@@ -182,8 +184,8 @@ class Simulation:
                     wait_time = lead.get_total_waiting_time(self.t)
                     self._waiting_times.append(wait_time)
 
-        self._non_empty_roads -= new_empty_roads
-        self._non_empty_roads |= new_non_empty_roads
+        self._non_empty_roads.difference_update(new_empty_roads)
+        self._non_empty_roads.update(new_non_empty_roads)
         self.detect_collisions()
 
         # Increment time

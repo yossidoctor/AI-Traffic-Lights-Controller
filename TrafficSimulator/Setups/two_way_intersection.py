@@ -1,4 +1,5 @@
-from TrafficSimulator import Simulation, turn_road, TURN_RIGHT, TURN_LEFT
+from TrafficSimulator import Simulation
+from TrafficSimulator.curve import turn_road, TURN_RIGHT, TURN_LEFT
 
 n = 15  # Curve resolution
 a = 2  # Short offset from (0, 0)
@@ -153,7 +154,7 @@ SLOW_FACTOR = 0.4
 STOP_DISTANCE = 15
 
 
-def setup(max_gen=None):
+def two_way_intersection_setup(max_gen=None):
     sim = Simulation(max_gen)
     sim.add_roads(ROADS)
     sim.add_generator(VEHICLE_RATE, PATHS)
