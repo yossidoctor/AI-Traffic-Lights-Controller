@@ -1,8 +1,9 @@
 from collections import deque
-from typing import Deque
+from typing import Deque, Optional
 
 from scipy.spatial import distance
 
+from TrafficSimulator.traffic_signal import TrafficSignal
 from TrafficSimulator.vehicle import Vehicle
 
 
@@ -18,11 +19,11 @@ class Road:
         self.angle_sin: float = (self.end[1] - self.start[1]) / self.length
         self.angle_cos: float = (self.end[0] - self.start[0]) / self.length
 
-        self.has_traffic_signal = False
-        self.traffic_signal = None
-        self.traffic_signal_group = None
+        self.has_traffic_signal: bool = False
+        self.traffic_signal: Optional[TrafficSignal] = None
+        self.traffic_signal_group: Optional[int] = None
 
-    def set_traffic_signal(self, signal, group):
+    def set_traffic_signal(self, signal: TrafficSignal, group):
         self.has_traffic_signal = True
         self.traffic_signal = signal
         self.traffic_signal_group = group
@@ -48,13 +49,12 @@ class Road:
                 lead.unstop(sim_t)
                 for vehicle in self.vehicles:
                     vehicle.unslow()
-            else:
-                # If traffic signal is red
+            elif lead.x <= self.length - self.traffic_signal.stop_distance / 2:
+                # If traffic signal is red - slow and stop vehicles if they're able to slow safely
                 if lead.x >= self.length - self.traffic_signal.slow_distance:
                     # Slow vehicles in slowing zone
                     lead.slow(self.traffic_signal.slow_factor)
-                if self.length - self.traffic_signal.stop_distance <= lead.x <= \
-                        self.length - self.traffic_signal.stop_distance / 2:
+                if self.length - self.traffic_signal.stop_distance <= lead.x:
                     # Stop vehicles in the stop zone
                     lead.stop(sim_t)
 

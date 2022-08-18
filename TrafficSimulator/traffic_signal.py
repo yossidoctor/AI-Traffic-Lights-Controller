@@ -1,13 +1,11 @@
 from itertools import chain
 from typing import List, Tuple, Set
 
-from TrafficSimulator.road import Road
-
 
 class TrafficSignal:
-    def __init__(self, roads: List[List[Road]], cycle: List[Tuple],
+    def __init__(self, roads: List[List], cycle: List[Tuple],
                  slow_distance: float, slow_factor: float, stop_distance: float):
-        self.roads: List[List[Road]] = roads
+        self.roads: List[List] = roads
         self.roads_indexes: Set[int] = set(road.index for road in chain.from_iterable(roads))
         self.cycle: List[Tuple[bool]] = cycle
         self.current_cycle_index = 0
