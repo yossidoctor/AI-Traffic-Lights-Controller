@@ -25,7 +25,7 @@ class Simulation:
         self._gui: Optional[Window] = None
         self._non_empty_roads: Set[int] = set()
         self._intersections: Dict[int, Set[int]] = {}  # {Road index: [intersecting roads' indexes]}
-        self._max_gen: Optional[int] = max_gen  # Vehicle generation limit
+        self.max_gen: Optional[int] = max_gen  # Vehicle generation limit
         self._waiting_times: List[float] = []  # for vehicles that completed the journey
 
     @property
@@ -43,8 +43,9 @@ class Simulation:
         """
         Whether a terminal state (as defined under the MDP of the task) is reached.
         """
-        if self._max_gen:
-            return self.n_vehicles_generated == self._max_gen and not self.n_vehicles_on_map
+        if self.max_gen:
+            return self.collision_detected or (self.n_vehicles_generated == self.max_gen
+                                               and not self.n_vehicles_on_map)
         return self.collision_detected
 
     @property
@@ -62,7 +63,7 @@ class Simulation:
                     output[road] = intersecting_roads
         return output
 
-    def init_gui(self) -> None:
+    def render(self) -> None:
         """ Initializes the GUI and updates the display """
         if not self._gui:
             self._gui = Window(self)
@@ -75,20 +76,21 @@ class Simulation:
             if self.completed or self.gui_closed:
                 return
 
-    def run(self, action: None, n: int = 180) -> None:
+    def run(self, action: None) -> None:
         """ Performs n simulation updates. Terminates early upon completion or GUI closing
-        :param n: the number of simulation updates to perform, 200 by default
         :param action: an action from a reinforcement learning environment action space
         """
+        n = 180  # 3 simulation seconds
         if action:
             self._update_signals()
-            self._loop(180)  # 3 simulation seconds
+            self._loop(n)
             if self.completed or self.gui_closed:
                 return
             self._update_signals()
-        self._loop(n)  # TODO: set 100 for fixed cycle
+        self._loop(n)
 
-    def get_average_wait_time(self) -> float:
+    @property
+    def average_wait_time(self) -> float:
         """ Returns the average wait time of vehicles
         that completed the journey and aren't on the map """
         if not self._waiting_times:
@@ -98,7 +100,7 @@ class Simulation:
     def detect_collisions(self) -> None:
         """ Detects collisions by checking all non-empty intersecting vehicle paths.
         Updates the self.collision_detected attribute """
-        radius = 2
+        radius = 3
         for main_road, intersecting_roads in self.intersections.items():
             vehicles = self.roads[main_road].vehicles
             intersecting_vehicles = chain.from_iterable(
@@ -107,6 +109,7 @@ class Simulation:
                 for intersecting in intersecting_vehicles:
                     if distance.euclidean(vehicle.position, intersecting.position) < radius:
                         self.collision_detected = True
+                        print("TRUE")
                         return
 
     def add_intersections(self, intersections_dict: Dict[int, Set[int]]) -> None:
@@ -132,9 +135,11 @@ class Simulation:
         traffic_signal = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
         self.traffic_signals.append(traffic_signal)
 
-    def _update_signals(self) -> None:
+    def _update_signals(self, yellow=False) -> None:
         for traffic_signal in self.traffic_signals:
             traffic_signal.update()
+        if self._gui:
+            self._gui.update()
 
     def update(self) -> None:
         # Update every road
@@ -143,7 +148,7 @@ class Simulation:
 
         # Add vehicles
         for gen in self.generators:
-            if self._max_gen and self.n_vehicles_generated == self._max_gen:
+            if self.max_gen and self.n_vehicles_generated == self.max_gen:
                 break
             road_index = gen.update(self.t, self.n_vehicles_generated)
             if road_index is not None:
