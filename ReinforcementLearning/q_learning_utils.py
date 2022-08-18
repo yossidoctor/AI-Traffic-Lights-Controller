@@ -25,9 +25,7 @@ def train_agent(agent, environment, path, n_episodes: int, render: bool = False)
     current_time = time.time()
 
     for n_episode in range(1, n_episodes + 1):
-        state = environment.reset()
-        if render:
-            environment.render()
+        state = environment.reset(render)
         score = 0
         done = False
 
@@ -59,9 +57,7 @@ def validate_agent(agent, environment, n_episodes: int, render: bool = False):
     total_wait_time, total_collisions, n_completed = 0, 0, 0
 
     for n_episode in range(1, n_episodes + 1):
-        state = environment.reset()
-        if render:
-            environment.render()
+        state = environment.reset(render)
         score = 0
         collision_detected = 0
         done = False
@@ -77,7 +73,7 @@ def validate_agent(agent, environment, n_episodes: int, render: bool = False):
 
         total_collisions += collision_detected
         n_completed += 1
-        wait_time = environment.sim.get_average_wait_time()
+        wait_time = environment.sim.average_wait_time
         total_wait_time += wait_time
         print(f"Episode {n_episode} -- Collision: {int(collision_detected)}"
               f" -- Wait time: {wait_time:.2f}")
