@@ -92,9 +92,10 @@ class Simulation:
     def average_wait_time(self) -> float:
         """ Returns the average wait time of vehicles
         that completed the journey and aren't on the map """
-        if not self._waiting_times_sum or not self.max_gen:
+        n_completed_journey = self.n_vehicles_generated - self.n_vehicles_on_map
+        if not self._waiting_times_sum or not self.max_gen or not n_completed_journey:
             return 0
-        return round(self._waiting_times_sum / self.max_gen, 2)
+        return round(self._waiting_times_sum / n_completed_journey, 2)
 
     def detect_collisions(self) -> None:
         """ Detects collisions by checking all non-empty intersecting vehicle paths.
