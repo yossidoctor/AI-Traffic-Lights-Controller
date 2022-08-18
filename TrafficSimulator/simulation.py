@@ -1,5 +1,4 @@
 from itertools import chain
-from statistics import mean
 from typing import List, Dict, Tuple, Set, Optional
 
 from scipy.spatial import distance
@@ -26,7 +25,7 @@ class Simulation:
         self._non_empty_roads: Set[int] = set()
         self._intersections: Dict[int, Set[int]] = {}  # {Road index: [intersecting roads' indexes]}
         self.max_gen: Optional[int] = max_gen  # Vehicle generation limit
-        self._waiting_times: List[float] = []  # for vehicles that completed the journey
+        self._waiting_times_sum: float = 0  # for vehicles that completed the journey
 
     @property
     def gui_closed(self) -> bool:
@@ -93,9 +92,10 @@ class Simulation:
     def average_wait_time(self) -> float:
         """ Returns the average wait time of vehicles
         that completed the journey and aren't on the map """
-        if not self._waiting_times:
+        if not self._waiting_times_sum or not self.max_gen:
             return 0
-        return mean(self._waiting_times)
+        # return mean(self._waiting_times)
+        return round(self._waiting_times_sum / self.max_gen, 2)
 
     def detect_collisions(self) -> None:
         """ Detects collisions by checking all non-empty intersecting vehicle paths.
@@ -109,7 +109,6 @@ class Simulation:
                 for intersecting in intersecting_vehicles:
                     if distance.euclidean(vehicle.position, intersecting.position) < radius:
                         self.collision_detected = True
-                        print("TRUE")
                         return
 
     def add_intersections(self, intersections_dict: Dict[int, Set[int]]) -> None:
@@ -135,7 +134,8 @@ class Simulation:
         traffic_signal = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
         self.traffic_signals.append(traffic_signal)
 
-    def _update_signals(self, yellow=False) -> None:
+    def _update_signals(self) -> None:
+        """ Updates all the simulation traffic signals and updates the gui, if exists """
         for traffic_signal in self.traffic_signals:
             traffic_signal.update()
         if self._gui:
@@ -185,9 +185,8 @@ class Simulation:
                     if not road.vehicles:
                         new_empty_roads.add(road.index)
                     self.n_vehicles_on_map -= 1
-                    # Update the log
-                    wait_time = lead.get_total_waiting_time(self.t)
-                    self._waiting_times.append(wait_time)
+                    # Update the waiting times sum
+                    self._waiting_times_sum += lead.waiting_time
 
         self._non_empty_roads.difference_update(new_empty_roads)
         self._non_empty_roads.update(new_non_empty_roads)

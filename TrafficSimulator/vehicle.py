@@ -23,7 +23,7 @@ class Vehicle:
 
         self.is_stopped = False
         self._last_time_stopped = None
-        self._total_waiting_time = 0
+        self.waiting_time = 0
 
         self.path: List[int] = path  # Road indexes
         self.current_road_index = 0
@@ -33,11 +33,6 @@ class Vehicle:
 
     def __str__(self):
         return f'Vehicle {self.index}'
-
-    def get_total_waiting_time(self, sim_t):
-        if self.is_stopped:
-            return self._total_waiting_time + (sim_t - self._last_time_stopped)
-        return self._total_waiting_time
 
     def update(self, lead, dt, road):
         """
@@ -80,7 +75,7 @@ class Vehicle:
 
     def unstop(self, t):
         if self.is_stopped:
-            self._total_waiting_time += (t - self._last_time_stopped)
+            self.waiting_time += (t - self._last_time_stopped)
             self._last_time_stopped = None
             self.is_stopped = False
 
