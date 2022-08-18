@@ -11,8 +11,8 @@ from pygame.draw import polygon
 
 class Window:
     def __init__(self, simulation):
-        self._width = 900  # 1400
-        self._height = 700  # 900
+        self._width = 1000
+        self._height = 630
 
         self.closed: bool = False
         self._sim = simulation
