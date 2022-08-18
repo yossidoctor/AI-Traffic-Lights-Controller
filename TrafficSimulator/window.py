@@ -4,10 +4,11 @@ import numpy as np
 import pygame
 from pygame.draw import polygon
 
+
 # # For debugging purposes
-DRAW_VEHICLE_IDS = True
-DRAW_ROAD_IDS = False
-FILL_POLYGONS = True
+# DRAW_VEHICLE_IDS = True
+# DRAW_ROAD_IDS = False
+# FILL_POLYGONS = True
 
 
 class Window:
@@ -93,16 +94,16 @@ class Window:
         else:
             points = self._convert([vertex(*e) for e in [(0, -1), (0, 1), (2, 1), (2, -1)]])
 
-        # polygon(self._screen, color, points)
+        polygon(self._screen, color, points)
 
-        # For debugging purposes
-        width = 0 if FILL_POLYGONS else 2
-        x1, x2 = points[0][0], points[2][0]
-        y1, y2 = points[0][1], points[2][1]
-        screen_x = x1 + (x2 - x1) / 2
-        screen_y = y1 + (y2 - y1) / 2
-        polygon(self._screen, color, points, width)
-        return screen_x, screen_y
+        # # For debugging purposes
+        # width = 0 if FILL_POLYGONS else 2
+        # x1, x2 = points[0][0], points[2][0]
+        # y1, y2 = points[0][1], points[2][1]
+        # screen_x = x1 + (x2 - x1) / 2
+        # screen_y = y1 + (y2 - y1) / 2
+        # polygon(self._screen, color, points, width)
+        # return screen_x, screen_y
 
     def _draw_arrow(self, pos, size, angle=None, cos=None, sin=None, color=(150, 150, 190)) -> None:
         if angle:
@@ -155,14 +156,14 @@ class Window:
         sin, cos = road.angle_sin, road.angle_cos
         x = road.start[0] + cos * vehicle.x
         y = road.start[1] + sin * vehicle.x
-        # self._rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
+        self._rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
 
-        # For debugging purposes
-        screen_x, screen_y = self._rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
-        if DRAW_VEHICLE_IDS:
-            text_road_index = self._text_font.render(f'{vehicle.index}', True, (255, 255, 255),
-                                                     (0, 0, 0))
-            self._screen.blit(text_road_index, (screen_x - 5, screen_y - 5))
+        # # For debugging purposes
+        # screen_x, screen_y = self._rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
+        # if DRAW_VEHICLE_IDS:
+        #     text_road_index = self._text_font.render(f'{vehicle.index}', True, (255, 255, 255),
+        #                                              (0, 0, 0))
+        #     self._screen.blit(text_road_index, (screen_x - 5, screen_y - 5))
 
     def _draw_vehicles(self) -> None:
         for i in self._sim.non_empty_roads:
