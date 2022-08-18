@@ -5,10 +5,10 @@ from ReinforcementLearning import q_learning
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="AI Traffic Lights Controller")
-    parser.add_argument("-m, --method",
+    parser.add_argument("-m", "--method",
                         choices=['fc', 'lqf', 'qlearning', 'search'],
                         required=True)
-    parser.add_argument("-e, --episodes", metavar='N',
+    parser.add_argument("-e", "--episodes", metavar='N',
                         help="Number of evaluation episodes to run",
                         type=int,
                         required=True)
