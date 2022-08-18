@@ -62,7 +62,7 @@ class Simulation:
                     output[road] = intersecting_roads
         return output
 
-    def render(self) -> None:
+    def init_gui(self) -> None:
         """ Initializes the GUI and updates the display """
         if not self._gui:
             self._gui = Window(self)
@@ -94,7 +94,6 @@ class Simulation:
         that completed the journey and aren't on the map """
         if not self._waiting_times_sum or not self.max_gen:
             return 0
-        # return mean(self._waiting_times)
         return round(self._waiting_times_sum / self.max_gen, 2)
 
     def detect_collisions(self) -> None:
