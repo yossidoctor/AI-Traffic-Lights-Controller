@@ -1,6 +1,8 @@
 # import time
 
 # Hyper-parameters
+from ReinforcementLearning import Environment, QLearningAgent
+
 alpha = 0.1
 discount = 0.6
 epsilon = 0.1
@@ -83,3 +85,13 @@ def validate_agent(agent, environment, n_episodes: int, render: bool = False):
     print(
         f"Average wait time per completed episode: {total_wait_time / n_completed:.2f}")
     print(f"Average collisions per episode: {total_collisions / n_episodes:.2f}")
+
+
+def q_learning(n_episodes: int, render: bool):
+    env: Environment = Environment()
+    actions = env.action_space
+    q_agent = QLearningAgent(alpha, epsilon, discount, actions)
+    file_name = "ReinforcementLearning/Traffic_q_values_10000.txt"
+    # train_agent(q_agent, env, file_name, n_train_episodes, render=False)
+    q_agent.q_values = eval(get_q_values(file_name))
+    validate_agent(q_agent, env, n_episodes, render)
