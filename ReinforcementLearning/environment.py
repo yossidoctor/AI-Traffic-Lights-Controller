@@ -54,7 +54,7 @@ class Environment:
     def reset(self, render=False) -> Tuple:
         self.sim = two_way_intersection_setup(self.max_gen)
         if render:
-            self.sim.render()
+            self.sim.init_gui()
         init_state = self.get_state()
         self._vehicles_on_inbound_roads = 0
         return init_state

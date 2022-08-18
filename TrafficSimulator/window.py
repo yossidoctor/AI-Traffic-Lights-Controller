@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 import pygame
 from pygame.draw import polygon
@@ -15,14 +13,16 @@ class Window:
     def __init__(self, simulation):
         self._width = 900  # 1400
         self._height = 700  # 900
+
+        self.closed: bool = False
+        self._sim = simulation
+
         self._background_color = (235, 235, 235)
         self._screen = pygame.display.set_mode((self._width, self._height))
         pygame.display.flip()
         pygame.font.init()
         font = f'Lucida Console'
         self._text_font = pygame.font.SysFont(font, 16)
-        self.closed: bool = False
-        self._sim = simulation
         self._zoom = 5
         self._offset = (0, 0)
         self._mouse_last = (0, 0)
@@ -81,7 +81,7 @@ class Window:
                      color=(0, 0, 255)):
         """Draws a rectangle center at *pos* with size *size* rotated anti-clockwise by *angle*."""
 
-        def vertex(e1, e2) -> Tuple:
+        def vertex(e1, e2):
             return (x + (e1 * l * cos + e2 * h * sin) / 2,
                     y + (e1 * l * sin - e2 * h * cos) / 2)
 
