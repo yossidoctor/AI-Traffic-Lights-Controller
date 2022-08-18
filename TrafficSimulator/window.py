@@ -4,17 +4,17 @@ import numpy as np
 import pygame
 from pygame.draw import polygon
 
-
 # # For debugging purposes
-# DRAW_VEHICLE_IDS = False
-# DRAW_ROAD_IDS = False
-# FILL_POLYGONS = True
+DRAW_VEHICLE_IDS = True
+DRAW_ROAD_IDS = False
+FILL_POLYGONS = True
 
 
 class Window:
     def __init__(self, simulation):
-        self._width = 900
-        self._height = 700
+        self._width = 900  # 1400
+        self._height = 700  # 900
+        self._background_color = (235, 235, 235)
         self._screen = pygame.display.set_mode((self._width, self._height))
         pygame.display.flip()
         pygame.font.init()
@@ -77,7 +77,7 @@ class Window:
                 int(-self._offset[1] + (y - self._height / 2) / self._zoom))
 
     def _rotated_box(self, pos, size, angle=None, cos=None, sin=None, centered=True,
-                     color=(0, 0, 255)) -> None:
+                     color=(0, 0, 255)):
         """Draws a rectangle center at *pos* with size *size* rotated anti-clockwise by *angle*."""
 
         def vertex(e1, e2) -> Tuple:
@@ -93,16 +93,16 @@ class Window:
         else:
             points = self._convert([vertex(*e) for e in [(0, -1), (0, 1), (2, 1), (2, -1)]])
 
-        polygon(self._screen, color, points)
+        # polygon(self._screen, color, points)
 
-        # # For debugging purposes
-        # width = 0 if FILL_POLYGONS else 2
-        # x1, x2 = points[0][0], points[2][0]
-        # y1, y2 = points[0][1], points[2][1]
-        # screen_x = x1 + (x2 - x1) / 2
-        # screen_y = y1 + (y2 - y1) / 2
-        # polygon(self._screen, color, points, width)
-        # return screen_x, screen_y
+        # For debugging purposes
+        width = 0 if FILL_POLYGONS else 2
+        x1, x2 = points[0][0], points[2][0]
+        y1, y2 = points[0][1], points[2][1]
+        screen_x = x1 + (x2 - x1) / 2
+        screen_y = y1 + (y2 - y1) / 2
+        polygon(self._screen, color, points, width)
+        return screen_x, screen_y
 
     def _draw_arrow(self, pos, size, angle=None, cos=None, sin=None, color=(150, 150, 190)) -> None:
         if angle:
@@ -155,14 +155,14 @@ class Window:
         sin, cos = road.angle_sin, road.angle_cos
         x = road.start[0] + cos * vehicle.x
         y = road.start[1] + sin * vehicle.x
-        self._rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
+        # self._rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
 
-        # # For debugging purposes
-        # screen_x, screen_y = self._rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
-        # if DRAW_VEHICLE_IDS:
-        #     text_road_index = self._text_font.render(f'{vehicle.index}', True, (255, 255, 255),
-        #                                              (0, 0, 0))
-        #     self._screen.blit(text_road_index, (screen_x - 5, screen_y - 5))
+        # For debugging purposes
+        screen_x, screen_y = self._rotated_box((x, y), (l, h), cos=cos, sin=sin, centered=True)
+        if DRAW_VEHICLE_IDS:
+            text_road_index = self._text_font.render(f'{vehicle.index}', True, (255, 255, 255),
+                                                     (0, 0, 0))
+            self._screen.blit(text_road_index, (screen_x - 5, screen_y - 5))
 
     def _draw_vehicles(self) -> None:
         for i in self._sim.non_empty_roads:
@@ -188,14 +188,23 @@ class Window:
                                       cos=road.angle_cos, sin=road.angle_sin, color=color)
 
     def _draw_status(self):
-        def render(text, color=(0, 0, 0), background=None):
+        def render(text, color=(0, 0, 0), background=self._background_color):
             return self._text_font.render(text, True, color, background)
 
-        t = render(f't: {self._sim.t:.2f}')
+        t = render(f'Time: {self._sim.t:.1f}')
+        if self._sim.max_gen:
+            n_max_gen = render(f'Max Gen: {self._sim.max_gen}')
+            self._screen.blit(n_max_gen, (10, 50))
+        n_vehicles_generated = render(f'Vehicles Generated: {self._sim.n_vehicles_generated}')
+        n_vehicles_on_map = render(f'Vehicles On Map: {self._sim.n_vehicles_on_map}')
+        average_wait_time = render(f'Average Wait Time: {self._sim.average_wait_time:.2f}')
         self._screen.blit(t, (10, 20))
+        self._screen.blit(n_vehicles_generated, (10, 70))
+        self._screen.blit(n_vehicles_on_map, (10, 90))
+        self._screen.blit(average_wait_time, (10, 120))
 
     def _draw(self):
-        self._screen.fill((250, 250, 250))
+        self._screen.fill(self._background_color)
         self._draw_roads()
         self._draw_vehicles()
         self._draw_signals()
