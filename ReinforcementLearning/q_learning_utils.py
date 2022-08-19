@@ -1,8 +1,7 @@
 # import time
-
-# Hyper-parameters
 from ReinforcementLearning import Environment, QLearningAgent
 
+# Hyper-parameters
 alpha = 0.1
 discount = 0.6
 epsilon = 0.1
@@ -76,7 +75,7 @@ def validate_agent(agent, environment, n_episodes: int, render: bool = False):
             print(f"Episode {episode} - Collisions: {int(collision_detected)}")
             total_collisions += 1
         else:
-            wait_time = environment.sim.average_wait_time
+            wait_time = environment.sim.current_average_wait_time
             total_wait_time += wait_time
             print(f"Episode {episode} - Wait time: {wait_time:.2f}")
 

@@ -198,7 +198,7 @@ class Window:
             self._screen.blit(n_max_gen, (10, 50))
         n_vehicles_generated = render(f'Vehicles Generated: {self._sim.n_vehicles_generated}')
         n_vehicles_on_map = render(f'Vehicles On Map: {self._sim.n_vehicles_on_map}')
-        average_wait_time = render(f'Average Wait Time: {self._sim.average_wait_time:.2f}')
+        average_wait_time = render(f'Current Wait Time: {self._sim.current_average_wait_time:.1f}')
         self._screen.blit(t, (10, 20))
         self._screen.blit(n_vehicles_generated, (10, 70))
         self._screen.blit(n_vehicles_on_map, (10, 90))

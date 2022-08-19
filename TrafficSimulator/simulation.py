@@ -75,7 +75,7 @@ class Simulation:
             if self.completed or self.gui_closed:
                 return
 
-    def run(self, action: None) -> None:
+    def run(self, action: Optional[int] = None) -> None:
         """ Performs n simulation updates. Terminates early upon completion or GUI closing
         :param action: an action from a reinforcement learning environment action space
         """
@@ -89,13 +89,20 @@ class Simulation:
         self._loop(n)
 
     @property
-    def average_wait_time(self) -> float:
+    def current_average_wait_time(self) -> float:
         """ Returns the average wait time of vehicles
         that completed the journey and aren't on the map """
+
+        on_map_wait_time = 0
+        completed_wait_time = 0
         n_completed_journey = self.n_vehicles_generated - self.n_vehicles_on_map
-        if not self._waiting_times_sum or not self.max_gen or not n_completed_journey:
-            return 0
-        return round(self._waiting_times_sum / n_completed_journey, 2)
+        if n_completed_journey:
+            completed_wait_time = round(self._waiting_times_sum / n_completed_journey, 2)
+        if self.n_vehicles_on_map:
+            total_on_map_wait_time = sum(vehicle.get_wait_time(self.t) for i in self.non_empty_roads
+                                         for vehicle in self.roads[i].vehicles)
+            on_map_wait_time = total_on_map_wait_time / self.n_vehicles_on_map
+        return completed_wait_time + on_map_wait_time
 
     def detect_collisions(self) -> None:
         """ Detects collisions by checking all non-empty intersecting vehicle paths.
@@ -186,7 +193,7 @@ class Simulation:
                         new_empty_roads.add(road.index)
                     self.n_vehicles_on_map -= 1
                     # Update the waiting times sum
-                    self._waiting_times_sum += lead.waiting_time
+                    self._waiting_times_sum += lead.get_wait_time(self.t)
 
         self._non_empty_roads.difference_update(new_empty_roads)
         self._non_empty_roads.update(new_non_empty_roads)

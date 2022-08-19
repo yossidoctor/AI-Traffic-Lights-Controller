@@ -30,8 +30,8 @@ def longest_queue_action(simulation, state) -> bool:
     return switch
 
 
-action_funcs = {'fixed_cycle_action': fixed_cycle_action,
-                'longest_queue_action': longest_queue_action}
+action_funcs = {'fc': fixed_cycle_action,
+                'lqf': longest_queue_action}
 
 
 def default_cycle(n_episodes: int, action_func_name: str, render):
@@ -57,7 +57,7 @@ def default_cycle(n_episodes: int, action_func_name: str, render):
             print(f"Episode {episode} - Collisions: {int(collision_detected)}")
             total_collisions += 1
         else:
-            wait_time = environment.sim.average_wait_time
+            wait_time = environment.sim.current_average_wait_time
             total_wait_time += wait_time
             print(f"Episode {episode} - Wait time: {wait_time:.2f}")
 
