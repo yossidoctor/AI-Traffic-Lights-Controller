@@ -90,7 +90,8 @@ def q_learning(n_episodes: int, render: bool):
     env: Environment = Environment()
     actions = env.action_space
     q_agent = QLearningAgent(alpha, epsilon, discount, actions)
-    file_name = "ReinforcementLearning/Traffic_q_values_10000.txt"
+    n_train_episodes = 10000
+    file_name = f"ReinforcementLearning/Traffic_q_values_{n_train_episodes}.txt"
     # train_agent(q_agent, env, file_name, n_train_episodes, render=False)
     q_agent.q_values = eval(get_q_values(file_name))
     validate_agent(q_agent, env, n_episodes, render)

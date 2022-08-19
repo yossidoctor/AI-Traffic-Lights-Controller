@@ -121,7 +121,7 @@ class Simulation:
     def add_intersections(self, intersections_dict: Dict[int, Set[int]]) -> None:
         self._intersections.update(intersections_dict)
 
-    def add_road(self, start: int, end: int) -> None:
+    def add_road(self, start: Tuple[int, int], end: Tuple[int, int]) -> None:
         road = Road(start, end, index=len(self.roads))
         self.roads.append(road)
 
