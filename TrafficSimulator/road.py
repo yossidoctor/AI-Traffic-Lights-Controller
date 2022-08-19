@@ -43,19 +43,21 @@ class Road:
         n = len(self.vehicles)
         if n > 0:
             lead: Vehicle = self.vehicles[0]
-            lead_in_safe_zone = lead.x <= self.length - self.traffic_signal.stop_distance / 2
+
             # Check for traffic signal
             if self.traffic_signal_state:
                 # If traffic signal is green or doesn't exist, let vehicles pass
                 lead.unstop(sim_t)
                 for vehicle in self.vehicles:
                     vehicle.unslow()
-            elif lead_in_safe_zone:
-                # If traffic signal is red, and the lead vehiclein the safe zone
-                lead.slow(self.traffic_signal.slow_factor)  # slow vehicles in slow zone
-                lead_in_stop_zone = self.length - self.traffic_signal.stop_distance <= lead.x
-                if lead_in_stop_zone:
-                    lead.stop(sim_t)
+            elif self.has_traffic_signal:
+                lead_in_safe_zone = lead.x <= self.length - self.traffic_signal.stop_distance / 2
+                if lead_in_safe_zone:
+                    # If traffic signal is red, and the lead vehicle in the safe zone
+                    lead.slow(self.traffic_signal.slow_factor)  # slow vehicles in slow zone
+                    lead_in_stop_zone = self.length - self.traffic_signal.stop_distance <= lead.x
+                    if lead_in_stop_zone:
+                        lead.stop(sim_t)
             # else, if there's a red/yellow light and the vehicle isn't in the safe zone
             # just let it pass
 
