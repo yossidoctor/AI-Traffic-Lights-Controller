@@ -32,23 +32,34 @@ class Environment:
         return new_state, step_reward, terminated, truncated
 
     def get_state(self) -> Tuple:
-        """ a state optimized for two_way_intersection:
-        west_east_signal_state, n_west_east_vehicles, n_south_north_vehicles, non_empty_junction"""
-        west_east_signal_state = self.sim.roads[0].traffic_signal_state
-        n_west_east_vehicles = sum(len(self.sim.roads[i].vehicles) for i in [0, 2])
-        n_south_north_vehicles = sum(len(self.sim.roads[i].vehicles) for i in [1, 3])
-        vehicles_on_outbound_roads = sum(len(self.sim.roads[i].vehicles) for i in [4, 5, 6, 7])
-        non_empty_junction = bool(self.sim.n_vehicles_on_map - vehicles_on_outbound_roads -
-                                  n_west_east_vehicles - n_south_north_vehicles)
-        state = [west_east_signal_state, n_west_east_vehicles,
-                 n_south_north_vehicles, non_empty_junction]
+        """ A state is a tuple, with sub-tuples representing junctions with traffic signals.
+        Each sub-tuple is contains the following stats: the traffic signal state, the number
+        of vehicles in the 1st direction, the number of vehicles in the 2nd direction,
+        and an indicator of whether the junction is empty or not """
+        state = []
+        for traffic_signal in self.sim.traffic_signals:
+            junction = []
+            traffic_signal_state = traffic_signal.current_cycle[0]
+            junction.append(traffic_signal_state)
+
+            for direction in traffic_signal.roads:
+                junction.append(sum(len(road.vehicles) for road in direction))
+
+            n_direction_1_vehicles, n_direction_2_vehicles = junction[1], junction[2]
+            out_bound_vehicles = sum(len(self.sim.roads[i].vehicles) for i in self.sim.outbound_roads)
+            non_empty_junction = bool(self.sim.n_vehicles_on_map - out_bound_vehicles -
+                                      n_direction_1_vehicles - n_direction_2_vehicles)
+            junction.append(non_empty_junction)
+            state.append(junction)
+        state = state[0]  # Optimization for a single junction simulation setup
         return tuple(state)
 
     def get_reward(self, state: Tuple) -> float:
         """ Check whether the flow change is positive or negative using the difference
         in the number of vehicles in the inbound roads from the previous state """
-        west_east_signal_state, n_west_east_vehicles, n_south_north_vehicles, non_empty_junction = state
-        flow_change = self._vehicles_on_inbound_roads - n_west_east_vehicles - n_south_north_vehicles
+        traffic_signal_state, n_direction_1_vehicles, n_direction_2_vehicles, non_empty_junction = state
+        # self._vehicles_on_inbound_roads holds the data from the previous state
+        flow_change = self._vehicles_on_inbound_roads - n_direction_1_vehicles - n_direction_2_vehicles
         return flow_change
 
     def reset(self, render=False) -> Tuple:
@@ -56,5 +67,5 @@ class Environment:
         if render:
             self.sim.init_gui()
         init_state = self.get_state()
-        self._vehicles_on_inbound_roads = 0
+        self._vehicles_on_inbound_roads = 0  # Reset the counter
         return init_state

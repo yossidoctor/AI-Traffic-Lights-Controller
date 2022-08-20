@@ -1,32 +1,36 @@
 from ReinforcementLearning import Environment
 
-t = 15
+t = 15  # Cycle time threshold
 
 
-def fixed_cycle_action(simulation, dummy=None) -> bool:
+def fixed_cycle_action(sim, dummy=None) -> bool:
     """ Returns a boolean indicating to take an action
     if the enough time elapsed since previous action """
     switch = False
-    time_elapsed = simulation.t - simulation.traffic_signals[0].prev_update_time >= t
+    traffic_signal = sim.traffic_signals[0]
+    time_elapsed = sim.t - traffic_signal.prev_update_time >= t
     if time_elapsed:
-        simulation.traffic_signals[0].prev_update_time = simulation.t
+        traffic_signal.prev_update_time = sim.t
         switch = True
     return switch
 
 
-def longest_queue_action(simulation, state) -> bool:
+def longest_queue_action(curr_state, prev_state) -> bool:
     """ Returns a boolean indicating to take an action
     if the enough time elapsed since previous action """
     switch = False
-    time_elapsed = simulation.t - simulation.traffic_signals[0].prev_update_time >= t
+    traffic_signal = curr_state.traffic_signals[0]
+    time_elapsed = curr_state.t - traffic_signal.prev_update_time >= t
     if time_elapsed:
-        west_east_signal_state, n_west_east_vehicles, n_south_north_vehicles, non_empty_junction = state
-        if west_east_signal_state and n_west_east_vehicles < n_south_north_vehicles:
+        traffic_signal_state, n_direction_1_vehicles, n_direction_2_vehicles, non_empty_junction = prev_state
+        # If the direction with most vehicles has a red light, switch it to green
+        if traffic_signal_state and n_direction_1_vehicles < n_direction_2_vehicles:
             switch = True
-        elif not west_east_signal_state and n_west_east_vehicles > n_south_north_vehicles:
+        elif not traffic_signal_state and n_direction_1_vehicles > n_direction_2_vehicles:
             switch = True
     if switch:
-        simulation.traffic_signals[0].prev_update_time = simulation.t
+        # Update the traffic signal update time
+        traffic_signal.prev_update_time = curr_state.t
     return switch
 
 
