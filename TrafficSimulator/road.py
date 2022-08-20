@@ -23,7 +23,7 @@ class Road:
         self.traffic_signal: Optional[TrafficSignal] = None
         self.traffic_signal_group: Optional[int] = None
 
-    def set_traffic_signal(self, signal: TrafficSignal, group):
+    def set_traffic_signal(self, signal: TrafficSignal, group: int):
         self.has_traffic_signal = True
         self.traffic_signal = signal
         self.traffic_signal_group = group
@@ -46,20 +46,20 @@ class Road:
 
             # Check for traffic signal
             if self.traffic_signal_state:
-                # If traffic signal is green or doesn't exist, let vehicles pass
+                # If traffic signal is green (or doesn't exist), let vehicles pass
                 lead.unstop(sim_t)
                 for vehicle in self.vehicles:
                     vehicle.unslow()
             elif self.has_traffic_signal:
-                lead_in_safe_zone = lead.x <= self.length - self.traffic_signal.stop_distance / 2
-                if lead_in_safe_zone:
-                    # If traffic signal is red, and the lead vehicle in the safe zone
+                # The traffic signal is red (existence checked to access its stop_distance)
+                lead_can_stop_safely = lead.x <= self.length - self.traffic_signal.stop_distance / 2
+                if lead_can_stop_safely:
                     lead.slow(self.traffic_signal.slow_factor)  # slow vehicles in slow zone
                     lead_in_stop_zone = self.length - self.traffic_signal.stop_distance <= lead.x
                     if lead_in_stop_zone:
                         lead.stop(sim_t)
-            # else, if there's a red/yellow light and the vehicle isn't in the safe zone
-            # just let it pass
+                # Else, the vehicle can't be stopped slowly in a yellow light and
+                # therefore should pass as quickly as possible, without being even slowed down
 
             # Update first vehicle
             lead.update(None, dt, self)
