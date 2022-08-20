@@ -10,7 +10,7 @@ from TrafficSimulator.window import Window
 
 
 class Simulation:
-    def __init__(self, max_gen=None):
+    def __init__(self, max_gen: int = None):
         self.t = 0.0  # Time
         self.dt = 1 / 60  # Time step
         self.roads: List[Road] = []
@@ -22,10 +22,43 @@ class Simulation:
         self.n_vehicles_on_map: int = 0
 
         self._gui: Optional[Window] = None
+
         self._non_empty_roads: Set[int] = set()
+        # To calculate the number of vehicles in the junction, use:
+        # n_vehicles_on_map - _inbound_roads vehicles - _outbound_roads vehicles
+        self._inbound_roads: Set[int] = set()
+        self._outbound_roads: Set[int] = set()
+
         self._intersections: Dict[int, Set[int]] = {}  # {Road index: [intersecting roads' indexes]}
         self.max_gen: Optional[int] = max_gen  # Vehicle generation limit
         self._waiting_times_sum: float = 0  # for vehicles that completed the journey
+
+    def add_intersections(self, intersections_dict: Dict[int, Set[int]]) -> None:
+        self._intersections.update(intersections_dict)
+
+    def add_road(self, start: Tuple[int, int], end: Tuple[int, int]) -> None:
+        road = Road(start, end, index=len(self.roads))
+        self.roads.append(road)
+
+    def add_roads(self, roads: List[Tuple[int, int]]) -> None:
+        for road in roads:
+            self.add_road(*road)
+
+    def add_generator(self, vehicle_rate, paths: List[List]) -> None:
+        inbound_roads: List[Road] = [self.roads[roads[0]] for weight, roads in paths]
+        inbound_dict: Dict[int: Road] = {road.index: road for road in inbound_roads}
+        vehicle_generator = VehicleGenerator(vehicle_rate, paths, inbound_dict)
+        self.generators.append(vehicle_generator)
+
+        for (weight, roads) in paths:
+            self._inbound_roads.add(roads[0])
+            self._outbound_roads.add(roads[-1])
+
+    def add_traffic_signal(self, roads: List[List[int]], cycle: List[Tuple],
+                           slow_distance: float, slow_factor: float, stop_distance: float) -> None:
+        roads: List[List[Road]] = [[self.roads[i] for i in road_group] for road_group in roads]
+        traffic_signal = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
+        self.traffic_signals.append(traffic_signal)
 
     @property
     def gui_closed(self) -> bool:
@@ -62,32 +95,6 @@ class Simulation:
                     output[road] = intersecting_roads
         return output
 
-    def init_gui(self) -> None:
-        """ Initializes the GUI and updates the display """
-        if not self._gui:
-            self._gui = Window(self)
-        self._gui.update()
-
-    def _loop(self, n: int) -> None:
-        """ Performs n simulation updates. Terminates early upon completion or GUI closing"""
-        for _ in range(n):
-            self.update()
-            if self.completed or self.gui_closed:
-                return
-
-    def run(self, action: Optional[int] = None) -> None:
-        """ Performs n simulation updates. Terminates early upon completion or GUI closing
-        :param action: an action from a reinforcement learning environment action space
-        """
-        n = 180  # 3 simulation seconds
-        if action:
-            self._update_signals()
-            self._loop(n)
-            if self.completed or self.gui_closed:
-                return
-            self._update_signals()
-        self._loop(n)
-
     @property
     def current_average_wait_time(self) -> float:
         """ Returns the average wait time of vehicles
@@ -104,51 +111,27 @@ class Simulation:
             on_map_wait_time = total_on_map_wait_time / self.n_vehicles_on_map
         return completed_wait_time + on_map_wait_time
 
-    def detect_collisions(self) -> None:
-        """ Detects collisions by checking all non-empty intersecting vehicle paths.
-        Updates the self.collision_detected attribute """
-        radius = 3
-        for main_road, intersecting_roads in self.intersections.items():
-            vehicles = self.roads[main_road].vehicles
-            intersecting_vehicles = chain.from_iterable(
-                self.roads[i].vehicles for i in intersecting_roads)
-            for vehicle in vehicles:
-                for intersecting in intersecting_vehicles:
-                    if distance.euclidean(vehicle.position, intersecting.position) < radius:
-                        self.collision_detected = True
-                        return
+    def init_gui(self) -> None:
+        """ Initializes the GUI and updates the display """
+        if not self._gui:
+            self._gui = Window(self)
+        self._gui.update()
 
-    def add_intersections(self, intersections_dict: Dict[int, Set[int]]) -> None:
-        self._intersections.update(intersections_dict)
-
-    def add_road(self, start: Tuple[int, int], end: Tuple[int, int]) -> None:
-        road = Road(start, end, index=len(self.roads))
-        self.roads.append(road)
-
-    def add_roads(self, roads: List[Tuple[int, int]]) -> None:
-        for road in roads:
-            self.add_road(*road)
-
-    def add_generator(self, vehicle_rate, paths: List[List]) -> None:
-        inbound_roads: List[Road] = [self.roads[roads[0]] for weight, roads in paths]
-        inbound_dict: Dict[int: Road] = {road.index: road for road in inbound_roads}
-        vehicle_generator = VehicleGenerator(vehicle_rate, paths, inbound_dict)
-        self.generators.append(vehicle_generator)
-
-    def add_traffic_signal(self, roads: List[List[int]], cycle: List[Tuple],
-                           slow_distance: float, slow_factor: float, stop_distance: float) -> None:
-        roads: List[List[Road]] = [[self.roads[i] for i in road_group] for road_group in roads]
-        traffic_signal = TrafficSignal(roads, cycle, slow_distance, slow_factor, stop_distance)
-        self.traffic_signals.append(traffic_signal)
-
-    def _update_signals(self) -> None:
-        """ Updates all the simulation traffic signals and updates the gui, if exists """
-        for traffic_signal in self.traffic_signals:
-            traffic_signal.update()
-        if self._gui:
-            self._gui.update()
+    def run(self, action: Optional[int] = None) -> None:
+        """ Performs n simulation updates. Terminates early upon completion or GUI closing
+        :param action: an action from a reinforcement learning environment action space
+        """
+        n = 180  # 3 simulation seconds
+        if action:
+            self._update_signals()
+            self._loop(n)
+            if self.completed or self.gui_closed:
+                return
+            self._update_signals()
+        self._loop(n)
 
     def update(self) -> None:
+        """ Updates the roads, generates vehicles, detect collisions and updates the gui """
         # Update every road
         for i in self._non_empty_roads:
             self.roads[i].update(self.dt, self.t)
@@ -163,7 +146,47 @@ class Simulation:
                 self.n_vehicles_on_map += 1
                 self._non_empty_roads.add(road_index)
 
-        # Check roads for out-of-bounds vehicle
+        self._check_out_of_bounds_vehicles()
+
+        self._detect_collisions()
+
+        # Increment time
+        self.t += self.dt
+
+        # Update the display
+        if self._gui:
+            self._gui.update()
+
+    def _loop(self, n: int) -> None:
+        """ Performs n simulation updates. Terminates early upon completion or GUI closing"""
+        for _ in range(n):
+            self.update()
+            if self.completed or self.gui_closed:
+                return
+
+    def _update_signals(self) -> None:
+        """ Updates all the simulation traffic signals and updates the gui, if exists """
+        for traffic_signal in self.traffic_signals:
+            traffic_signal.update()
+        if self._gui:
+            self._gui.update()
+
+    def _detect_collisions(self) -> None:
+        """ Detects collisions by checking all non-empty intersecting vehicle paths.
+        Updates the self.collision_detected attribute """
+        radius = 3
+        for main_road, intersecting_roads in self.intersections.items():
+            vehicles = self.roads[main_road].vehicles
+            intersecting_vehicles = chain.from_iterable(
+                self.roads[i].vehicles for i in intersecting_roads)
+            for vehicle in vehicles:
+                for intersecting in intersecting_vehicles:
+                    if distance.euclidean(vehicle.position, intersecting.position) < radius:
+                        self.collision_detected = True
+                        return
+
+    def _check_out_of_bounds_vehicles(self):
+        """ Check roads for out-of-bounds vehicles, updates self.non_empty_roads """
         new_non_empty_roads = set()
         new_empty_roads = set()
         for i in self._non_empty_roads:
@@ -197,11 +220,3 @@ class Simulation:
 
         self._non_empty_roads.difference_update(new_empty_roads)
         self._non_empty_roads.update(new_non_empty_roads)
-        self.detect_collisions()
-
-        # Increment time
-        self.t += self.dt
-
-        # Update the display
-        if self._gui:
-            self._gui.update()
