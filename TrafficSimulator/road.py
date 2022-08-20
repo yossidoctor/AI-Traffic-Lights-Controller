@@ -53,13 +53,14 @@ class Road:
             elif self.has_traffic_signal:
                 # The traffic signal is red (existence checked to access its stop_distance)
                 lead_can_stop_safely = lead.x <= self.length - self.traffic_signal.stop_distance / 2
+                # This check is to ensure that we don't stop vehicles that are too close to the traffic
+                # signal when it turns to yellow. In such a case, the vehicle should pass as quickly as possible,
+                # without being even slowed down
                 if lead_can_stop_safely:
                     lead.slow(self.traffic_signal.slow_factor)  # slow vehicles in slow zone
                     lead_in_stop_zone = self.length - self.traffic_signal.stop_distance <= lead.x
                     if lead_in_stop_zone:
                         lead.stop(sim_t)
-                # Else, the vehicle can't be stopped slowly in a yellow light and
-                # therefore should pass as quickly as possible, without being even slowed down
 
             # Update first vehicle
             lead.update(None, dt, self)
