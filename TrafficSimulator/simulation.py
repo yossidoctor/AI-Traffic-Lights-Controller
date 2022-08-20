@@ -111,6 +111,14 @@ class Simulation:
             on_map_wait_time = total_on_map_wait_time / self.n_vehicles_on_map
         return completed_wait_time + on_map_wait_time
 
+    @property
+    def inbound_roads(self) -> Set[int]:
+        return self._inbound_roads
+
+    @property
+    def outbound_roads(self) -> Set[int]:
+        return self._outbound_roads
+
     def init_gui(self) -> None:
         """ Initializes the GUI and updates the display """
         if not self._gui:
