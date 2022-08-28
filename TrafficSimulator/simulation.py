@@ -133,9 +133,11 @@ class Simulation:
         if action:
             self._update_signals()
             self._loop(n)
-            if self.completed or self.gui_closed:
+            if self.collision_detected or self.gui_closed:
                 return
             self._update_signals()
+            if self.completed or self.gui_closed:
+                return
         self._loop(n)
 
     def update(self) -> None:

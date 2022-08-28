@@ -52,7 +52,7 @@ class Road:
                     vehicle.unslow()
             elif self.has_traffic_signal:
                 # The traffic signal is red (existence checked to access its stop_distance)
-                lead_can_stop_safely = lead.x <= self.length - self.traffic_signal.stop_distance / 2
+                lead_can_stop_safely = lead.x <= self.length - self.traffic_signal.stop_distance / 1.5
                 # This check is to ensure that we don't stop vehicles that are too close to the traffic
                 # signal when it turns to yellow. In such a case, the vehicle should pass as quickly as possible,
                 # without being even slowed down
