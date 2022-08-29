@@ -31,6 +31,8 @@ def sim_run(render):
                 sim.run(False)
             else:
                 sim.run(True)
+    if sim.gui_closed:
+        exit()
     if sim.collision_detected:
         return -1  # Indicates the simulation run failed
     return sim.current_average_wait_time
