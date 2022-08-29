@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from DefaultCycles import default_cycle
 from ReinforcementLearning import q_learning
+from Search import search
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="AI Traffic Lights Controller")
@@ -17,4 +18,4 @@ if __name__ == '__main__':
     elif args.method == 'qlearning':
         q_learning(n_episodes=args.episodes, render=args.render)
     elif args.method == 'search':
-        pass
+        search(episodes=args.episodes, render=args.render)
