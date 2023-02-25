@@ -26,11 +26,11 @@ To decide what chain of actions to do next, the agent takes a snapshot of the si
 
 ## Experimentation
 
-We measured the default behavior of traffic lights using a timer-based system (fixed cycle) and a sensor-based system (longest queue first) and found that the sensor-based system performed better for every cycle length. We then trained our Q-Learning agent for 10,000 episodes, each containing 50 vehicles. The agent cut down the average waiting time of vehicles by up to 11% compared to the default behavior. Additionally, the collision rate went down. Interestingly, training for 20,000 and 50,000 episodes did not improve the results further.
+We measured the default behavior of traffic lights using a timer-based system (fixed cycle) and a sensor-based system (longest queue first) and found that the sensor-based system performed better for every cycle length. We then trained our Q-Learning agent for 10,000 episodes, each containing 50 vehicles.
 
 ## Results
 
-Our Q-Learning agent reduced the average waiting time of vehicles by up to 11%, and the genetic algorithm-based agent reduced the waiting time by up to 7%, compared to the default behavior. These results demonstrate the effectiveness of our approach to coordinating traffic lights using AI.
+Our Q-Learning agent reduced the average waiting time of vehicles by up to 11% compared to the default behavior. Additionally, the collision rate went down. Interestingly, training for 20,000 and 50,000 episodes did not improve the results further. The genetic algorithm-based agent reduced the waiting time by up to 7%, compared to the default behavior. These results demonstrate the effectiveness of our approach to coordinating traffic lights using AI.
 
 ## Installation
 
